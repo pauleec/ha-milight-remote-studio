@@ -1,0 +1,19 @@
+{
+  "domain": "milight_remote_studio",
+  "name": "Mi-Light Remote Studio",
+  "version": "0.1.0",
+  "documentation": "https://github.com/pauleec/ha-milight-remote-studio",
+  "requirements": [
+    "aiohttp>=3.8.0"
+  ],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "dependencies": [
+    "mqtt",
+    "panel_custom"
+  ],
+  "codeowners": [
+    "@pauleec"
+  ],
+  "issue_tracker": "https://github.com/pauleec/ha-milight-remote-studio/issues"
+}

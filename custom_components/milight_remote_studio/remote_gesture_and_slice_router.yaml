@@ -1,0 +1,68 @@
+blueprint:
+  name: Mi-Light Remote Gesture & Segmented Slice Router
+  description: >
+    Trigger any Home Assistant action when a Mi-Light remote or wall panel zone
+    emits a single tap, double/triple tap, long-press night mode, or segmented
+    color-wheel / slider macro event.
+  domain: automation
+  input:
+    remote_event_entity:
+      name: Remote Zone Event Entity
+      description: Select the event.* entity for the remote and zone (for example event.milight_0x125c_zone_1).
+      selector:
+        entity:
+          filter:
+            - domain: event
+    event_types:
+      name: Matching Event Types
+      description: >
+        Leave empty to trigger on any event from this zone, or enter one or more
+        event_type values (for example on, on_double, night_mode, hue_seg_1, cct_seg_2).
+      default: []
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - "on"
+            - "on_double"
+            - "on_triple"
+            - "off"
+            - "off_double"
+            - "off_triple"
+            - "night_mode"
+            - "set_white"
+            - "mode"
+            - "mode_speed_up"
+            - "mode_speed_down"
+            - "hue_seg_1"
+            - "hue_seg_2"
+            - "hue_seg_3"
+            - "hue_seg_4"
+            - "hue_seg_5"
+            - "hue_seg_6"
+            - "cct_seg_1"
+            - "cct_seg_2"
+            - "cct_seg_3"
+            - "cct_seg_4"
+    action_to_run:
+      name: Action to Run
+      description: Home Assistant action(s) to execute when a matching gesture or slice fires.
+      selector:
+        action: {}
+
+mode: queued
+max: 20
+
+trigger:
+  - platform: state
+    entity_id: !input remote_event_entity
+
+condition:
+  - condition: template
+    value_template: >
+      {% set evt = trigger.to_state.state %}
+      {% set allowed = event_types | default([], true) %}
+      {{ evt not in ['unknown', 'unavailable', ''] and (allowed | length == 0 or evt in allowed) }}
+
+action: !input action_to_run

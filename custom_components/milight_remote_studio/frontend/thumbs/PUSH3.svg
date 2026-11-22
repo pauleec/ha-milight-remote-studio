@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 210" width="95" height="95">
+        <g class="mbx-hit" data-act="on" style="cursor:pointer">
+          <rect x="10" y="10" width="190" height="190" rx="7" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <line x1="14" y1="24" x2="196" y2="24" stroke="#e2e8f0" stroke-width="1"/>
+          <text x="184" y="186" text-anchor="end" fill="#94a3b8" font-size="9.5" font-weight="800">MiBOXER®</text>
+        </g>
+      </svg>

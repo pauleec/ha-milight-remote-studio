@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 250" width="86" height="113">
+        <defs>
+      <linearGradient id="cct_B8B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="52%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+      <linearGradient id="vcct_B8B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#facc15"/></linearGradient>
+      <linearGradient id="vrgb_B8B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="25%" stop-color="#3b82f6"/><stop offset="55%" stop-color="#22c55e"/><stop offset="80%" stop-color="#eab308"/><stop offset="100%" stop-color="#ef4444"/></linearGradient>
+      <linearGradient id="hrgb_B8B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="20%" stop-color="#eab308"/><stop offset="42%" stop-color="#22c55e"/><stop offset="65%" stop-color="#06b6d4"/><stop offset="84%" stop-color="#2563eb"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+      <linearGradient id="dual_top_B8B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="55%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
+      <linearGradient id="dual_bot_B8B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b91c1c"/><stop offset="50%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fee2e2"/></linearGradient>
+      <linearGradient id="hsatfade_B8B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity="0"/><stop offset="55%" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.96"/></linearGradient>
+      <linearGradient id="vsat_rgb_B8B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eab308"/><stop offset="28%" stop-color="#ef4444"/><stop offset="68%" stop-color="#16a34a"/><stop offset="100%" stop-color="#064e3b"/></linearGradient>
+    <radialGradient id="b8led_B8B_ha" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.72"/>
+        <stop offset="65%" stop-color="#ef4444" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+        <rect x="4" y="4" width="182" height="242" rx="8" fill="#1e2229" stroke="#384152" stroke-width="2"/>
+        <rect x="9" y="9" width="172" height="232" rx="5" fill="#161920" stroke="#384152" stroke-width="0.7"/>
+        <text x="22" y="25" fill="#94a3b8" font-size="8.5" font-weight="800">MiBOXER®</text>
+        <text x="168" y="24" text-anchor="end" fill="#e2e8f0" font-size="6.5" font-weight="800">2.4G RF</text>
+        <!-- Left V-Bar + Center Wheel (with W) + Right Blue Sun V-Bar -->
+        <g class="mbx-hit" data-act="saturation" data-val="50" style="cursor:pointer">
+      <clipPath id="vsat_B8B_ha_25_42"><rect x="25" y="42" width="10.5" height="86" rx="5.25"/></clipPath>
+      <g clip-path="url(#vsat_B8B_ha_25_42)">
+        <rect x="25" y="42" width="10.5" height="86" fill="url(#vsat_rgb_B8B_ha)"/>
+        <rect x="25" y="42" width="10.5" height="86" fill="url(#hsatfade_B8B_ha)"/>
+      </g>
+      <rect x="25" y="42" width="10.5" height="86" rx="5.25" fill="none" stroke="#525e73" stroke-width="0.7"/>
+    </g>
+        <g transform="rotate(145 95 85)"><circle class="mbx-hit" data-act="hue" data-val="0" cx="95" cy="85" r="36" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="0.00" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="15" cx="95" cy="85" r="36" fill="none" stroke="#dc2626" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-9.42" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="30" cx="95" cy="85" r="36" fill="none" stroke="#be123c" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-18.85" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="45" cx="95" cy="85" r="36" fill="none" stroke="#9d174d" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-28.27" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="60" cx="95" cy="85" r="36" fill="none" stroke="#86198f" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-37.70" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="75" cx="95" cy="85" r="36" fill="none" stroke="#6b21a8" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-47.12" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="90" cx="95" cy="85" r="36" fill="none" stroke="#5b21b6" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-56.55" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="105" cx="95" cy="85" r="36" fill="none" stroke="#4338ca" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-65.97" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="120" cx="95" cy="85" r="36" fill="none" stroke="#1d4ed8" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-75.40" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="135" cx="95" cy="85" r="36" fill="none" stroke="#0284c7" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-84.82" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="150" cx="95" cy="85" r="36" fill="none" stroke="#0891b2" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-94.25" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="165" cx="95" cy="85" r="36" fill="none" stroke="#06b6d4" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-103.67" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="180" cx="95" cy="85" r="36" fill="none" stroke="#0d9488" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-113.10" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="195" cx="95" cy="85" r="36" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-122.52" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="210" cx="95" cy="85" r="36" fill="none" stroke="#16a34a" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-131.95" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="225" cx="95" cy="85" r="36" fill="none" stroke="#22c55e" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-141.37" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="240" cx="95" cy="85" r="36" fill="none" stroke="#65a30d" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-150.80" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="255" cx="95" cy="85" r="36" fill="none" stroke="#84cc16" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-160.22" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="270" cx="95" cy="85" r="36" fill="none" stroke="#eab308" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-169.65" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="285" cx="95" cy="85" r="36" fill="none" stroke="#facc15" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-179.07" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="300" cx="95" cy="85" r="36" fill="none" stroke="#f59e0b" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-188.50" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="315" cx="95" cy="85" r="36" fill="none" stroke="#f97316" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-197.92" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="330" cx="95" cy="85" r="36" fill="none" stroke="#ea580c" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-207.35" style="cursor:pointer"/><circle class="mbx-hit" data-act="hue" data-val="345" cx="95" cy="85" r="36" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="10.32 226.19" stroke-dashoffset="-216.77" style="cursor:pointer"/></g>
+        <g class="mbx-hit" data-act="set_white" style="cursor:pointer">
+          <circle cx="95" cy="85" r="14" fill="#161920" stroke="#525e73" stroke-width="0.9"/>
+          <text x="95" y="89" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">W</text>
+        </g>
+        <g class="mbx-hit" data-act="brightness" data-val="85" style="cursor:pointer">
+      <rect x="153" y="42" width="12" height="86" rx="6" fill="#0ea5e9"/>
+      <text x="159" y="53" text-anchor="middle" fill="#fff" font-size="9">☀</text>
+      <circle cx="159" cy="60.0" r="2.10" fill="#fff"/><circle cx="159" cy="70.0" r="1.90" fill="#fff"/><circle cx="159" cy="80.0" r="1.70" fill="#fff"/><circle cx="159" cy="90.0" r="1.50" fill="#fff"/><circle cx="159" cy="100.0" r="1.30" fill="#fff"/><circle cx="159" cy="110.0" r="1.10" fill="#fff"/>
+      <text x="159" y="123" text-anchor="middle" fill="#fff" font-size="6.5">☀</text>
+    </g>
+        <g class="mbx-hit" data-act="on"  style="cursor:pointer">
+      <rect x="21" y="148" width="26.5" height="18" rx="3.5" fill="#252b36" stroke="#525e73" stroke-width="0.85"/>
+      <text x="34.25" y="159.8" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="600">ON</text>
+      
+    </g><g class="mbx-hit" data-act="off"  style="cursor:pointer">
+      <rect x="51.5" y="148" width="26.5" height="18" rx="3.5" fill="#252b36" stroke="#525e73" stroke-width="0.85"/>
+      <text x="64.75" y="159.8" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="600">OFF</text>
+      
+    </g><g class="mbx-hit" data-act="mode_speed_down"  style="cursor:pointer">
+      <rect x="82" y="148" width="26.5" height="18" rx="3.5" fill="#252b36" stroke="#525e73" stroke-width="0.85"/>
+      <text x="95.25" y="159.8" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="600">S-</text>
+      
+    </g><g class="mbx-hit" data-act="mode"  style="cursor:pointer">
+      <rect x="112.5" y="148" width="26.5" height="18" rx="3.5" fill="#252b36" stroke="#525e73" stroke-width="0.85"/>
+      <text x="125.75" y="159.8" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="600">M</text>
+      
+    </g><g class="mbx-hit" data-act="mode_speed_up"  style="cursor:pointer">
+      <rect x="143" y="148" width="26.5" height="18" rx="3.5" fill="#252b36" stroke="#525e73" stroke-width="0.85"/>
+      <text x="156.25" y="159.8" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="600">S+</text>
+      
+    </g>
+        <g class="mbx-hit" data-act="zone" data-zone="0" style="cursor:pointer">
+            <circle cx="34" cy="186" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="34" y="189.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">All</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="1" style="cursor:pointer">
+            <circle cx="64.5" cy="186" r="12" fill="#252b36" stroke="#ef4444" stroke-width="1.2"/>
+            <circle cx="64.5" cy="186" r="11" fill="url(#b8led_B8B_ha)"/>
+            <text x="64.5" y="189.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="700">1</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="2" style="cursor:pointer">
+            <circle cx="95" cy="186" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="95" y="189.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">2</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="3" style="cursor:pointer">
+            <circle cx="125.5" cy="186" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="125.5" y="189.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">3</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="4" style="cursor:pointer">
+            <circle cx="156" cy="186" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="156" y="189.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">4</text>
+            
+          </g><g class="mbx-hit" data-act="night_mode"  style="cursor:pointer">
+            <circle cx="34" cy="217" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="34" y="217.5" text-anchor="middle" fill="#e2e8f0" font-size="7.5" font-weight="600">60S</text>
+            <text x="34" y="223.5" text-anchor="middle" fill="#94a3b8" font-size="3.8">Delay OFF</text>
+          </g><g class="mbx-hit" data-act="zone" data-zone="5" style="cursor:pointer">
+            <circle cx="64.5" cy="217" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="64.5" y="220.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">5</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="6" style="cursor:pointer">
+            <circle cx="95" cy="217" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="95" y="220.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">6</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="7" style="cursor:pointer">
+            <circle cx="125.5" cy="217" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="125.5" y="220.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">7</text>
+            
+          </g><g class="mbx-hit" data-act="zone" data-zone="8" style="cursor:pointer">
+            <circle cx="156" cy="217" r="12" fill="#252b36" stroke="#525e73" stroke-width="0.9"/>
+            
+            <text x="156" y="220.2" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="600">8</text>
+            
+          </g>
+      </svg>

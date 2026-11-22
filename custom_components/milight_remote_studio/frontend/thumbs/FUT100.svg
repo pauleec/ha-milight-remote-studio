@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 126 296" width="57" height="133">
+        <defs>
+      <linearGradient id="cct_FUT100_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="52%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+      <linearGradient id="vcct_FUT100_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#facc15"/></linearGradient>
+      <linearGradient id="vrgb_FUT100_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="25%" stop-color="#3b82f6"/><stop offset="55%" stop-color="#22c55e"/><stop offset="80%" stop-color="#eab308"/><stop offset="100%" stop-color="#ef4444"/></linearGradient>
+      <linearGradient id="hrgb_FUT100_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="20%" stop-color="#eab308"/><stop offset="42%" stop-color="#22c55e"/><stop offset="65%" stop-color="#06b6d4"/><stop offset="84%" stop-color="#2563eb"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+      <linearGradient id="dual_top_FUT100_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="55%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
+      <linearGradient id="dual_bot_FUT100_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b91c1c"/><stop offset="50%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fee2e2"/></linearGradient>
+      <linearGradient id="hsatfade_FUT100_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity="0"/><stop offset="55%" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.96"/></linearGradient>
+      <linearGradient id="vsat_rgb_FUT100_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eab308"/><stop offset="28%" stop-color="#ef4444"/><stop offset="68%" stop-color="#16a34a"/><stop offset="100%" stop-color="#064e3b"/></linearGradient>
+    <radialGradient id="b8led_FUT100_ha" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.72"/>
+        <stop offset="65%" stop-color="#ef4444" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+        <!-- Outer body: curved crown & base matching Fut100_45649846513.webp -->
+        <rect x="9" y="4" width="108" height="288" rx="26" fill="#f7f9fb" stroke="#d0d7e2" stroke-width="2"/>
+        <!-- Contoured Top Screen Bezel (curved top arch + crisp lower corners) -->
+        <path d="M 17 30 C 17 15, 32 11, 63 11 C 94 11, 109 15, 109 30 L 109 73 Q 109 77 105 77 L 21 77 Q 17 77 17 73 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.9"/>
+        <text x="63" y="22.5" text-anchor="middle" fill="#1e293b" font-size="7" font-weight="800" letter-spacing="0.3">MiBOXER®</text>
+
+        <!-- Monochrome Segmented LCD Window -->
+        <rect x="25" y="26.5" width="76" height="40" rx="1.5" fill="#d9e0d7" stroke="#64748b" stroke-width="0.9"/>
+        <!-- LCD Padlock + 3-Bar Battery Icon (top right) -->
+        <rect x="82" y="30" width="3.4" height="2.8" fill="none" stroke="#1e293b" stroke-width="0.7"/>
+        <path d="M 82.7 30 V 28.9 A 1 1 0 0 1 84.7 28.9 V 30" fill="none" stroke="#1e293b" stroke-width="0.7"/>
+        <rect x="88" y="28.7" width="9.5" height="4.2" rx="0.5" fill="none" stroke="#1e293b" stroke-width="0.7"/>
+        <rect x="97.5" y="29.8" width="1" height="2" fill="#1e293b"/>
+        <rect x="89.2" y="29.6" width="2" height="2.4" fill="#1e293b"/>
+        <rect x="91.9" y="29.6" width="2" height="2.4" fill="#1e293b"/>
+        <rect x="94.6" y="29.6" width="2" height="2.4" fill="#1e293b"/>
+
+        <!-- LCD Left Column: Giant 7-Seg Zone + Mode 8 + Save 3 -->
+        <text x="27.5" y="44" fill="#0f172a" font-family="monospace" font-size="16" font-weight="900" letter-spacing="-0.8">01</text>
+        <text x="27.5" y="53.5" fill="#1e293b" font-size="5" font-weight="700">Mode <tspan font-family="monospace" font-size="6.8" font-weight="800">8</tspan></text>
+        <text x="27.5" y="62.5" fill="#1e293b" font-size="5" font-weight="700">Save <tspan font-family="monospace" font-size="6.8" font-weight="800">3</tspan></text>
+
+        <!-- LCD Right Column: Stacked RGB/CCT 8888K, DIM 100%, SAT 100% -->
+        <text x="58" y="39.5" fill="#1e293b" font-size="4.3" font-weight="800">RGB</text>
+        <text x="58" y="43.8" fill="#1e293b" font-size="4.3" font-weight="800">CCT</text>
+        <text x="98.5" y="43.5" text-anchor="end" fill="#0f172a" font-family="monospace" font-size="8.2" font-weight="800">2700<tspan font-size="5.2">K</tspan></text>
+        <text x="58" y="53.5" fill="#1e293b" font-size="5" font-weight="800">DIM</text>
+        <text x="98.5" y="53.5" text-anchor="end" fill="#0f172a" font-family="monospace" font-size="8" font-weight="800">100<tspan font-size="5.2">%</tspan></text>
+        <text x="58" y="62.5" fill="#1e293b" font-size="5" font-weight="800">SAT</text>
+        <text x="98.5" y="62.5" text-anchor="end" fill="#0f172a" font-family="monospace" font-size="8" font-weight="800">100<tspan font-size="5.2">%</tspan></text>
+
+        <!-- Recessed Pill Indicator Light below LCD -->
+        <rect x="59.5" y="71.2" width="7" height="2.4" rx="1.2" fill="#f1f5f9" stroke="#64748b" stroke-width="0.7"/>
+
+        <!-- 3 Horizontal Touch Pills: Color Slider, Saturation/CCT Slider, Dimming Slider -->
+        <rect class="mbx-hit" data-act="hue" data-val="180" x="21" y="86" width="84" height="9.5" rx="4.75" fill="url(#hrgb_FUT100_ha)" stroke="#cbd5e1" stroke-width="0.6" style="cursor:pointer"/>
+        <g class="mbx-hit" data-act="kelvin" data-val="50" style="cursor:pointer">
+      <clipPath id="clip_FUT100_ha_21_106"><rect x="21" y="106" width="84" height="9.5" rx="4.75"/></clipPath>
+      <g clip-path="url(#clip_FUT100_ha_21_106)">
+        <rect x="21" y="106" width="84" height="4.94" fill="url(#dual_top_FUT100_ha)"/>
+        <rect x="21" y="110.56" width="84" height="4.94" fill="url(#hrgb_FUT100_ha)"/>
+      </g>
+      <rect x="21" y="106" width="84" height="9.5" rx="4.75" fill="none" stroke="#cbd5e1" stroke-width="0.6"/>
+    </g>
+        <g class="mbx-hit" data-act="brightness" data-val="85" style="cursor:pointer">
+      <rect x="21" y="126" width="84" height="9.5" rx="4.75" fill="#0ea5e9"/>
+      <circle cx="33.0" cy="130.75" r="0.80" fill="#fff"/><circle cx="40.7" cy="130.75" r="1.02" fill="#fff"/><circle cx="48.4" cy="130.75" r="1.24" fill="#fff"/><circle cx="56.1" cy="130.75" r="1.46" fill="#fff"/><circle cx="63.9" cy="130.75" r="1.68" fill="#fff"/><circle cx="71.6" cy="130.75" r="1.90" fill="#fff"/><circle cx="79.3" cy="130.75" r="2.12" fill="#fff"/><circle cx="87.0" cy="130.75" r="2.34" fill="#fff"/>
+      <text x="96" y="133.95" text-anchor="middle" fill="#fff" font-size="9">☀</text>
+    </g>
+
+        <!-- 2x3 Upper Rectangular Key Matrix: [ON] [△] [OFF] / [W] [▽] [Lock/Copy] -->
+        <g class="mbx-hit" data-act="zone_on" data-zone="0" style="cursor:pointer">
+      <rect x="21" y="140" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+      <text x="34" y="150.52" text-anchor="middle" fill="#475569" font-size="7.2" font-weight="600">ON</text>
+      
+    </g>
+        <g class="mbx-hit" data-act="zone" data-zone="6" style="cursor:pointer">
+          <rect x="50" y="140" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+          <polygon points="63,144.8 66.5,151 59.5,151" fill="none" stroke="#475569" stroke-width="1.1" stroke-linejoin="round"/>
+        </g>
+        <g class="mbx-hit" data-act="zone_off" data-zone="0" style="cursor:pointer">
+      <rect x="79" y="140" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+      <text x="92" y="150.52" text-anchor="middle" fill="#475569" font-size="7.2" font-weight="600">OFF</text>
+      
+    </g>
+
+        <g class="mbx-hit" data-act="set_white"  style="cursor:pointer">
+      <rect x="21" y="159" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+      <text x="34" y="169.52" text-anchor="middle" fill="#475569" font-size="7.2" font-weight="600">W</text>
+      
+    </g>
+        <g class="mbx-hit" data-act="zone" data-zone="96" style="cursor:pointer">
+          <rect x="50" y="159" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+          <polygon points="59.5,164 66.5,164 63,170.2" fill="none" stroke="#475569" stroke-width="1.1" stroke-linejoin="round"/>
+        </g>
+        <g class="mbx-hit" data-act="mode" style="cursor:pointer">
+        <rect x="79" y="159" width="26" height="16" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+        <!-- Padlock icon -->
+        <rect x="83.5" y="166.8" width="5.2" height="4.2" rx="0.7" fill="none" stroke="#475569" stroke-width="0.9"/>
+        <path d="M 84.6 166.8 V 165.2 A 1.5 1.5 0 0 1 87.6 165.2 V 166.8" fill="none" stroke="#475569" stroke-width="0.9"/>
+        <!-- Slash -->
+        <line x1="90.5" y1="171" x2="93.2" y2="163.5" stroke="#475569" stroke-width="0.85"/>
+        <!-- Overlapping Copy-Link squares -->
+        <rect x="94.5" y="164" width="4.2" height="4.2" rx="0.6" fill="none" stroke="#475569" stroke-width="0.85"/>
+        <rect x="96.5" y="166.5" width="4.2" height="4.2" rx="0.6" fill="#eef2f6" stroke="#475569" stroke-width="0.85"/>
+      </g>
+
+        <!-- 4x2 Lower Dual-Bank Zone & Scene Matrix -->
+        <g>
+      <rect x="21" y="179" width="40" height="15" rx="3.2" fill="#eef2f6" stroke="#0ea5e9" stroke-width="1.6"/>
+      <line x1="28" y1="183.3" x2="28" y2="189.7" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="41" y="189.5" text-anchor="middle" fill="#0ea5e9" font-size="8" font-weight="700">1/6</text>
+      <circle cx="53" cy="186.5" r="2.8" fill="none" stroke="#475569" stroke-width="1.2"/>
+      <rect class="mbx-hit" data-act="zone_on" data-zone="1" x="21" y="179" width="18" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone" data-zone="1" x="39" y="179" width="6" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone_off" data-zone="1" x="45" y="179" width="16" height="15" fill="transparent" style="cursor:pointer"/>
+    </g>
+        <g>
+      <rect x="65" y="179" width="40" height="15" rx="3.2" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.8"/>
+      <line x1="72" y1="183.3" x2="72" y2="189.7" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="85" y="189.5" text-anchor="middle" fill="#475569" font-size="8" font-weight="700">2/7</text>
+      <circle cx="97" cy="186.5" r="2.8" fill="none" stroke="#475569" stroke-width="1.2"/>
+      <rect class="mbx-hit" data-act="zone_on" data-zone="2" x="65" y="179" width="18" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone" data-zone="2" x="83" y="179" width="6" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone_off" data-zone="2" x="89" y="179" width="16" height="15" fill="transparent" style="cursor:pointer"/>
+    </g>
+        <g>
+      <rect x="21" y="198" width="40" height="15" rx="3.2" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.8"/>
+      <line x1="28" y1="202.3" x2="28" y2="208.7" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="41" y="208.5" text-anchor="middle" fill="#475569" font-size="8" font-weight="700">3/8</text>
+      <circle cx="53" cy="205.5" r="2.8" fill="none" stroke="#475569" stroke-width="1.2"/>
+      <rect class="mbx-hit" data-act="zone_on" data-zone="3" x="21" y="198" width="18" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone" data-zone="3" x="39" y="198" width="6" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone_off" data-zone="3" x="45" y="198" width="16" height="15" fill="transparent" style="cursor:pointer"/>
+    </g>
+        <g>
+      <rect x="65" y="198" width="40" height="15" rx="3.2" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.8"/>
+      <line x1="72" y1="202.3" x2="72" y2="208.7" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="85" y="208.5" text-anchor="middle" fill="#475569" font-size="8" font-weight="700">4/9</text>
+      <circle cx="97" cy="205.5" r="2.8" fill="none" stroke="#475569" stroke-width="1.2"/>
+      <rect class="mbx-hit" data-act="zone_on" data-zone="4" x="65" y="198" width="18" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone" data-zone="4" x="83" y="198" width="6" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone_off" data-zone="4" x="89" y="198" width="16" height="15" fill="transparent" style="cursor:pointer"/>
+    </g>
+        <g>
+      <rect x="21" y="217" width="40" height="15" rx="3.2" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.8"/>
+      <line x1="28" y1="221.3" x2="28" y2="227.7" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="41" y="227.5" text-anchor="middle" fill="#475569" font-size="8" font-weight="700">5/0</text>
+      <circle cx="53" cy="224.5" r="2.8" fill="none" stroke="#475569" stroke-width="1.2"/>
+      <rect class="mbx-hit" data-act="zone_on" data-zone="5" x="21" y="217" width="18" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone" data-zone="5" x="39" y="217" width="6" height="15" fill="transparent" style="cursor:pointer"/>
+      <rect class="mbx-hit" data-act="zone_off" data-zone="5" x="45" y="217" width="16" height="15" fill="transparent" style="cursor:pointer"/>
+    </g>
+        <g>
+        <rect x="65" y="217" width="40" height="15" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+        <text x="74" y="227" text-anchor="middle" fill="#475569" font-size="7.2" font-weight="600">S−</text>
+        <text x="96" y="227" text-anchor="middle" fill="#475569" font-size="7.2" font-weight="600">S+</text>
+        <rect class="mbx-hit" data-act="mode_speed_down" x="65" y="217" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+        <rect class="mbx-hit" data-act="mode_speed_up"   x="85" y="217" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+      </g>
+        <g>
+        <rect x="21" y="236" width="40" height="15" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+        
+        <path d="M 25 244.3 V 247.5 H 36 V 244.3" fill="none" stroke="#0284c7" stroke-width="1"/>
+        <text x="30.5" y="245.7" text-anchor="middle" fill="#0284c7" font-size="6.4" font-weight="700">1</text>
+        
+        <path d="M 46 244.3 V 247.5 H 57 V 244.3" fill="none" stroke="#0284c7" stroke-width="1"/>
+        <text x="51.5" y="245.7" text-anchor="middle" fill="#0284c7" font-size="6.4" font-weight="700">2</text>
+        <rect class="mbx-hit" data-act="scene_1" x="21" y="236" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+        <rect class="mbx-hit" data-act="scene_2" x="41" y="236" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+
+        <rect x="65" y="236" width="40" height="15" rx="2.5" fill="#eef2f6" stroke="#94a3b8" stroke-width="0.85"/>
+        
+        <path d="M 69 244.3 V 247.5 H 80 V 244.3" fill="none" stroke="#0284c7" stroke-width="1"/>
+        <text x="74.5" y="245.7" text-anchor="middle" fill="#0284c7" font-size="6.4" font-weight="700">3</text>
+        <text x="95.5" y="246.2" text-anchor="middle" fill="#0284c7" font-size="7.5" font-weight="700">M</text>
+        <rect class="mbx-hit" data-act="scene_3" x="65" y="236" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+        <rect class="mbx-hit" data-act="mode"    x="85" y="236" width="20" height="15" fill="transparent" style="cursor:pointer"/>
+      </g>
+
+        <!-- Authentic Bottom 2.4G RF + Waves + Model No.: FUT100 -->
+        <text x="58" y="264" text-anchor="middle" fill="#0f172a" font-size="6.8" font-weight="900" letter-spacing="0.4">2.4G RF</text>
+        <circle cx="75.5" cy="262" r="1" fill="#0f172a"/>
+        <path d="M 77 259.8 A 3 3 0 0 1 77 264.2" fill="none" stroke="#0f172a" stroke-width="0.9"/>
+        <path d="M 78.8 258.2 A 5 5 0 0 1 78.8 265.8" fill="none" stroke="#0f172a" stroke-width="0.9"/>
+        <text x="63" y="270.5" text-anchor="middle" fill="#475569" font-size="4.8" font-weight="600">Model No.: FUT100</text>
+      </svg>

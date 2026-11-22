@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="90" height="90">
+        <rect x="10" y="10" width="180" height="180" rx="10" fill="#1c1f26" stroke="#384152" stroke-width="2"/>
+        <line x1="10" y1="100" x2="190" y2="100" stroke="#0f1115" stroke-width="2"/>
+        <text class="mbx-hit" data-act="zone" data-zone="1" x="36" y="34" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" style="cursor:pointer">1 ZONE</text>
+        <text class="mbx-hit" data-act="zone" data-zone="2" x="164" y="34" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" style="cursor:pointer">2 ZONE</text>
+        <text class="mbx-hit" data-act="zone" data-zone="3" x="36" y="172" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" style="cursor:pointer">3 ZONE</text>
+        <text class="mbx-hit" data-act="zone" data-zone="4" x="164" y="172" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" style="cursor:pointer">4 ZONE</text>
+        <circle class="mbx-hit" data-act="on" cx="100" cy="100" r="44" fill="#232730" stroke="#0f1115" stroke-width="2.5" style="cursor:pointer"/>
+        <text x="100" y="105" text-anchor="middle" fill="#94a3b8" font-size="14" pointer-events="none">◐</text>
+        <text x="100" y="174" text-anchor="middle" fill="#64748b" font-size="8" font-weight="800">MiBOXER®</text>
+      </svg>

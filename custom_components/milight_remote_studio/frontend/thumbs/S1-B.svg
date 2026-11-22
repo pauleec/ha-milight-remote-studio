@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 190" width="86" height="86">
+        <defs>
+      <linearGradient id="cct_S1B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="52%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient>
+      <linearGradient id="vcct_S1B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#facc15"/></linearGradient>
+      <linearGradient id="vrgb_S1B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="25%" stop-color="#3b82f6"/><stop offset="55%" stop-color="#22c55e"/><stop offset="80%" stop-color="#eab308"/><stop offset="100%" stop-color="#ef4444"/></linearGradient>
+      <linearGradient id="hrgb_S1B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="20%" stop-color="#eab308"/><stop offset="42%" stop-color="#22c55e"/><stop offset="65%" stop-color="#06b6d4"/><stop offset="84%" stop-color="#2563eb"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+      <linearGradient id="dual_top_S1B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#facc15"/><stop offset="55%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>
+      <linearGradient id="dual_bot_S1B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b91c1c"/><stop offset="50%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fee2e2"/></linearGradient>
+      <linearGradient id="hsatfade_S1B_ha" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity="0"/><stop offset="55%" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.96"/></linearGradient>
+      <linearGradient id="vsat_rgb_S1B_ha" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eab308"/><stop offset="28%" stop-color="#ef4444"/><stop offset="68%" stop-color="#16a34a"/><stop offset="100%" stop-color="#064e3b"/></linearGradient>
+    <radialGradient id="b8led_S1B_ha" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.72"/>
+        <stop offset="65%" stop-color="#ef4444" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+        <circle cx="95" cy="95" r="85" fill="#1e2229" stroke="#384152" stroke-width="2.5"/>
+        <path class="mbx-hit" data-act="kelvin" d="M 46 146 A 68 68 0 1 1 144 146" fill="none" stroke="url(#cct_S1B_ha)" stroke-width="8.5" stroke-linecap="round" style="cursor:pointer"/>
+           <text x="55" y="160" fill="#94a3b8" font-size="7.5">☀</text><text x="128" y="161" fill="#e2e8f0" font-size="10">☀</text>
+        <circle cx="95" cy="95" r="50" fill="#161920" stroke="#525e73" stroke-width="1"/>
+        <text class="mbx-hit" data-act="on" x="95" y="68" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700" style="cursor:pointer">ON</text>
+           <text class="mbx-hit" data-act="brightness" x="66" y="99" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="700" style="cursor:pointer">DIM</text>
+           <text class="mbx-hit" data-act="kelvin" x="124" y="99" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="700" style="cursor:pointer">CCT</text>
+           <text class="mbx-hit" data-act="off" x="95" y="128" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700" style="cursor:pointer">OFF</text>
+      </svg>

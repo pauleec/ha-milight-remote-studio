@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 210" width="95" height="95"><g class="mbx-hit" data-act="zone_on" data-zone="1" style="cursor:pointer">
+          <rect x="6" y="6" width="99" height="99" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <circle cx="55.5" cy="55.5" r="40" fill="#e8edf3" stroke="#dde4ec" stroke-width="0.8"/>
+          <circle cx="56" cy="36" r="1.6" fill="#94a3b8"/>
+        </g><g class="mbx-hit" data-act="zone_on" data-zone="2" style="cursor:pointer">
+          <rect x="105" y="6" width="99" height="99" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <circle cx="154.5" cy="55.5" r="40" fill="#e8edf3" stroke="#dde4ec" stroke-width="0.8"/>
+          <circle cx="149" cy="36" r="1.6" fill="#94a3b8"/><circle cx="159" cy="36" r="1.6" fill="#94a3b8"/>
+        </g><g class="mbx-hit" data-act="zone_on" data-zone="3" style="cursor:pointer">
+          <rect x="6" y="105" width="99" height="99" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <circle cx="55.5" cy="154.5" r="40" fill="#e8edf3" stroke="#dde4ec" stroke-width="0.8"/>
+          <circle cx="53" cy="168" r="1.6" fill="#94a3b8"/><circle cx="59" cy="168" r="1.6" fill="#94a3b8"/><circle cx="56" cy="162" r="1.6" fill="#94a3b8"/>
+        </g><g class="mbx-hit" data-act="zone_on" data-zone="4" style="cursor:pointer">
+          <rect x="105" y="105" width="99" height="99" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <circle cx="154.5" cy="154.5" r="40" fill="#e8edf3" stroke="#dde4ec" stroke-width="0.8"/>
+          <circle cx="149" cy="162" r="1.6" fill="#94a3b8"/><circle cx="159" cy="162" r="1.6" fill="#94a3b8"/><circle cx="149" cy="170" r="1.6" fill="#94a3b8"/><circle cx="159" cy="170" r="1.6" fill="#94a3b8"/>
+        </g></svg>

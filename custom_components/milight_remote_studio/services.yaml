@@ -1,0 +1,45 @@
+refresh_registry:
+  name: Refresh Remote Registry
+  description: Fetch registered remotes from the ESP32 Hub and publish retained Home Assistant MQTT event discovery configs.
+
+sync_remote_config:
+  name: Sync Remote Config
+  description: Push a remote configuration object to the ESP32 Hub and update Home Assistant MQTT discovery.
+  fields:
+    hex:
+      name: Remote Hex ID
+      description: 16-bit remote hex identifier (for example 0x125C).
+      required: true
+      selector:
+        text:
+
+send_virtual_action:
+  name: Send Virtual Action
+  description: Send a virtual button press, multi-tap gesture, or segmented slice action via the ESP32 Hub.
+  fields:
+    hex:
+      name: Remote Hex ID
+      description: 16-bit remote hex identifier (for example 0x125C).
+      required: true
+      selector:
+        text:
+    zone:
+      name: Zone
+      description: Target zone number (0 for all zones, or 1..N).
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    action:
+      name: Action
+      description: Action or gesture_action to send (for example on, on_double, night_mode, hue_seg_1).
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: Optional numeric or string value for slider/wheel actions.
+      selector:
+        text:

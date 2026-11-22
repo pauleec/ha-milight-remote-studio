@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mi-Light Remote Studio",
+        "description": "Connect Home Assistant to your ESP32 Dual-Radio Hub, MQTT broker, and optional 3D Smart Home Twin.",
+        "data": {
+          "hub_url": "ESP32 Hub URL",
+          "twin_url": "3D Twin / Homebridge URL",
+          "mqtt_host": "MQTT Broker Host",
+          "mqtt_port": "MQTT Broker Port",
+          "topic_prefix": "MQTT Topic Prefix",
+          "hub_device_id": "Hub Device Identifier"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="90" height="90">
+        <rect x="10" y="10" width="180" height="180" rx="6" fill="#f7f9fb" stroke="#d0d7e2" stroke-width="2"/>
+        <circle cx="100" cy="96" r="64" fill="#f2f5f8" stroke="#d0d7e2" stroke-width="2"/>
+        <text class="mbx-hit" data-act="brightness" data-val="100" x="100" y="52" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" style="cursor:pointer">DIM+</text>
+        <text class="mbx-hit" data-act="brightness" data-val="15" x="100" y="146" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" style="cursor:pointer">DIM-</text>
+        <text class="mbx-hit" data-act="kelvin" data-val="10" x="52" y="99" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" style="cursor:pointer">CCT-</text>
+        <text class="mbx-hit" data-act="kelvin" data-val="90" x="148" y="99" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" style="cursor:pointer">CCT+</text>
+        <circle class="mbx-hit" data-act="on" cx="100" cy="96" r="26" fill="#f7f9fb" stroke="#94a3b8" style="cursor:pointer"/>
+        <text x="100" y="102" text-anchor="middle" fill="#475569" font-size="15" pointer-events="none">⏻</text>
+        <text x="100" y="182" text-anchor="middle" fill="#7c8ba1" font-size="8" font-weight="800">MiBOXER®</text>
+      </svg>
