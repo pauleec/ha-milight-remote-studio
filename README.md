@@ -1,3 +1,5 @@
+> **Plain-English Household Guide:** See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for easy setup and everyday button mapping without phone or voice reliance.
+
 # Mi-Light Visual Remote & Panel Studio for Home Assistant
 
 <!-- VISUAL_SHOWCASE_START -->
