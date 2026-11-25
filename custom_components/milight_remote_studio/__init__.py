@@ -97,7 +97,7 @@ async def _publish_remote_discovery(hass: HomeAssistant, remote: dict[str, Any],
     try:
         base_url = get_url(hass, allow_internal=True, allow_ip=True).rstrip("/")
     except Exception:
-        base_url = "http://192.168.6.196:8123"
+        base_url = get_url(hass, prefer_external=False)
 
     for z in range(0, zones + 1):
         disc_topic = f"homeassistant/event/milight_rem_{slug}_z{z}/config"
@@ -184,6 +184,91 @@ class MilightRemotesApiView(HomeAssistantView):
         return self.json({"remotes": ordered, "source": source, "hub_url": hub_url})
 
 
+
+
+class MilightStudioMetaView(HomeAssistantView):
+    url = f"/api/{DOMAIN}/studio_meta"
+    name = f"api:{DOMAIN}:studio_meta"
+    requires_auth = True
+
+    async def get(self, request: web.Request) -> web.Response:
+        hass: HomeAssistant = request.app["hass"]
+        domain_store = hass.data.get(DOMAIN, {})
+        active = next((v for k, v in domain_store.items() if isinstance(v, dict) and "config" in v), None)
+        hub_url = str((active or {}).get("config", {}).get("hub_url") or DEFAULT_HUB_URL).rstrip("/")
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=4)) as session:
+                async with session.get(f"{hub_url}/api/remotes/studio_meta") as resp:
+                    meta = await resp.json(content_type=None)
+                async with session.get(f"{hub_url}/api/remotes/custom_models") as cresp:
+                    cmodels = await cresp.json(content_type=None)
+            return self.json({"studio_meta": meta, "custom_models": cmodels, "hub_url": hub_url})
+        except Exception as err:
+            return self.json({"error": str(err), "hub_url": hub_url}, status_code=502)
+
+    async def post(self, request: web.Request) -> web.Response:
+        hass: HomeAssistant = request.app["hass"]
+        body = await request.json()
+        domain_store = hass.data.get(DOMAIN, {})
+        active = next((v for k, v in domain_store.items() if isinstance(v, dict) and "config" in v), None)
+        hub_url = str((active or {}).get("config", {}).get("hub_url") or DEFAULT_HUB_URL).rstrip("/")
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=4)) as session:
+                async with session.post(f"{hub_url}/api/remotes/studio_meta", json=body) as resp:
+                    res = await resp.json(content_type=None)
+                if active and "remotes" in active:
+                    live = await _fetch_hub_remotes(hub_url)
+                    for rem in live:
+                        hx = str(rem.get("hex_id") or rem.get("hex") or "").upper()
+                        if hx:
+                            rem["hex"] = rem.get("hex") or rem.get("hex_id") or hx
+                            active["remotes"][hx] = {**active["remotes"].get(hx, {}), **rem}
+            return self.json(res if isinstance(res, dict) else {"success": True})
+        except Exception as err:
+            return self.json({"error": str(err)}, status_code=502)
+
+
+class MilightDownloadStageView(HomeAssistantView):
+    url = f"/api/{DOMAIN}/download_stage"
+    name = f"api:{DOMAIN}:download_stage"
+    requires_auth = True
+
+    async def post(self, request: web.Request) -> web.Response:
+        import secrets, time
+        hass: HomeAssistant = request.app["hass"]
+        body = await request.json()
+        filename = re.sub(r"[^a-zA-Z0-9._-]", "_", str(body.get("filename") or "stencil_1to1.svg"))
+        content = str(body.get("content") or "")
+        mime = str(body.get("mime") or "application/octet-stream")
+        store = hass.data.setdefault(DOMAIN, {}).setdefault("_dl_tokens", {})
+        now = time.time()
+        for k in [k for k, v in store.items() if now - v["ts"] > 180]:
+            store.pop(k, None)
+        token = secrets.token_urlsafe(18)
+        store[token] = {"filename": filename, "content": content, "mime": mime, "ts": now}
+        return self.json({"url": f"/api/{DOMAIN}/dl/{token}/{filename}"})
+
+
+class MilightDownloadFetchView(HomeAssistantView):
+    url = f"/api/{DOMAIN}/dl/{{token}}/{{filename}}"
+    name = f"api:{DOMAIN}:download_fetch"
+    requires_auth = False
+
+    async def get(self, request: web.Request, token: str, filename: str) -> web.Response:
+        hass: HomeAssistant = request.app["hass"]
+        store = hass.data.get(DOMAIN, {}).get("_dl_tokens", {})
+        item = store.get(token)
+        if not item:
+            return web.Response(status=404, text="Download token expired")
+        safe_fn = item["filename"]
+        return web.Response(
+            body=item["content"].encode("utf-8"),
+            headers={
+                "Content-Type": "application/octet-stream",
+                "Content-Disposition": f'attachment; filename="{safe_fn}"',
+                "Cache-Control": "no-store",
+            },
+        )
 
 class MilightCalibrationView(HomeAssistantView):
     url = f"/api/{DOMAIN}/calibration"
@@ -418,6 +503,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(MilightRemotesApiView())
         hass.http.register_view(MilightCreateAutomationView())
         hass.http.register_view(MilightCalibrationView())
+        hass.http.register_view(MilightStudioMetaView())
+        hass.http.register_view(MilightDownloadStageView())
+        hass.http.register_view(MilightDownloadFetchView())
         fe_dir = Path(__file__).parent / "frontend"
         await hass.http.async_register_static_paths([
             StaticPathConfig(f"/{DOMAIN}_static/panel.js", str(fe_dir / "panel.js"), cache_headers=False),
@@ -429,7 +517,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             frontend_url_path=DOMAIN,
             sidebar_title="Mi-Light Studio",
             sidebar_icon="mdi:remote",
-            module_url=f"/{DOMAIN}_static/panel.js?v=1795346321",
+            module_url=f"/{DOMAIN}_static/panel.js?v={int((fe_dir / 'panel.js').stat().st_mtime)}",
             embed_iframe=False,
             require_admin=False,
             config={"hub_url": hub_url, "twin_url": twin_url},

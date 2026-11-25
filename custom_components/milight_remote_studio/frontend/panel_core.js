@@ -254,10 +254,31 @@ return false;
 
   async _mergeHubMetaIntoRemotes() {
     try {
-      if (window.MiBoxerCatalog && window.MiBoxerCatalog.syncCustomModelsFromHub) {
-        await window.MiBoxerCatalog.syncCustomModelsFromHub("http://192.168.7.121");
+      const hubUrl = this._getHubUrl();
+      if (this._hass) {
+        try {
+          const metaRes = await this._hass.callApi("GET", "milight_remote_studio/studio_meta");
+          if (metaRes && Array.isArray(metaRes.custom_models) && window.MiBoxerCatalog && window.MiBoxerCatalog.registerCustomModels) {
+            window.MiBoxerCatalog.registerCustomModels(metaRes.custom_models);
+          }
+          if (metaRes && metaRes.studio_meta && typeof metaRes.studio_meta === "object" && Array.isArray(this._remotes)) {
+            this._remotes.forEach((r) => {
+              const hx = String(r.hex || "").toUpperCase();
+              const m = metaRes.studio_meta[r.hex] || metaRes.studio_meta[hx] || metaRes.studio_meta[hx.replace(/^0X/, "0x")];
+              if (m) {
+                if (m.facia) r.facia = m.facia;
+                if (m.linked_device_id !== undefined) r.linked_device_id = m.linked_device_id;
+                if (m.linked_hex_id !== undefined) r.linked_hex_id = m.linked_hex_id;
+              }
+            });
+          }
+        } catch (_) {}
       }
-      const hr = await fetch("http://192.168.7.121/api/remotes", { cache: "no-store" });
+      if (window.MiBoxerCatalog && window.MiBoxerCatalog.syncCustomModelsFromHub) {
+        await window.MiBoxerCatalog.syncCustomModelsFromHub(hubUrl).catch(() => {});
+      }
+      const hr = await fetch(`${hubUrl}/api/remotes`, { cache: "no-store" }).catch(() => null);
+      if (!hr) return;
       if (!hr.ok) return;
       const list = await hr.json();
       const byHex = new Map();
@@ -283,24 +304,165 @@ return false;
     } catch (_) {}
   }
 
+  _getHubUrl() {
+    const c = (this._panel && this._panel.config) || this._panelConfig || {}; return String(c.hub_url || "http://milight-hub.local").replace(/\/+$/, "");
+  }
+
+  _isCompatPair(custRem, physRem) {
+    if (!custRem || !physRem || !window.MiBoxerCatalog || !window.MiBoxerCatalog.areModelsPhysicallyCompatible) return false;
+    return window.MiBoxerCatalog.areModelsPhysicallyCompatible(this._resolveModel(custRem), this._resolveModel(physRem));
+  }
+
+  _findLinkedPair(rem) {
+    if (!rem || !Array.isArray(this._remotes)) return null;
+    const curUp = String(rem.hex || "").toUpperCase();
+    const isCust = (x) => String(x.visual_model || x.model || "").startsWith("CUST_") || String(x.name || "").includes("[Showcase]");
+    if (isCust(rem)) {
+      const lhx = String(rem.linked_hex_id || "").toUpperCase();
+      if (!lhx) return null;
+      const phys = this._remotes.find((p) => String(p.hex || "").toUpperCase() === lhx);
+      return (phys && this._isCompatPair(rem, phys)) ? { custom: rem, physical: phys } : null;
+    }
+    const cust = this._remotes.find((c) => isCust(c) && String(c.linked_hex_id || "").toUpperCase() === curUp && this._isCompatPair(c, rem));
+    return cust ? { custom: cust, physical: rem } : null;
+  }
+
   _openHaStencilDesigner(rem) {
     if (!window.MiLightRemoteStudio || !window.MiLightRemoteStudio.openFaciaDesigner) return;
-    const mod = this._resolveModel(rem);
-    const baseId = mod.baseModel || mod.base || mod.id || "B8";
+    const target = rem || (this._remotes || []).find((x) => String(x.hex || "").toUpperCase() === String(this._selHex || "").toUpperCase()) || {};
+    const mod = this._resolveModel(target);
+    const hubUrl = this._getHubUrl();
     window.MiLightRemoteStudio.openFaciaDesigner({
-      hubUrl: "http://192.168.7.121",
-      baseModelId: baseId,
-      editingCustomId: String(mod.id || "").startsWith("CUST_") ? mod.id : "",
-      customName: String(rem.name || mod.name || "").replace(/^\[Showcase\]\s*/, ""),
-      remoteHex: rem.hex,
-      deviceId: rem.device_id || parseInt(String(rem.hex || "0").replace(/^0x/i, ""), 16),
-      facia: rem.facia,
-      touchZones: rem.touch_zones,
-      calibration: this._calibrations[String(rem.hex || "").toUpperCase()],
-      onSaved: async () => {
-        await this._loadRemotes();
-      }
+      hubUrl,
+      model: mod,
+      hexId: target.hex || this._selHex,
+      remoteName: target.name || mod.name || this._selHex,
+      facia: target.facia || (mod && mod.facia),
+      touchZones: target.touch_zones || (mod && mod.touchZones),
+      calibration: this._calibrations[String(target.hex || "").toUpperCase()],
+      onTestAction: (act, val, z) => {
+        const thx = target.hex || this._selHex;
+        this._triggerVisualFeedback(thx, act, z, "ui", val);
+        this._throttledSend(thx, z, act, val);
+      },
+      onSaveCustomModel: async () => { await this._loadRemotes(); this._refreshStudioView(); },
+      onDeleteCustomModel: async () => { await this._loadRemotes(); this._refreshStudioView(); }
     });
+  }
+
+
+  _mountCompanionFaceplate(hostEl, partnerRem, primaryRem) {
+    const C = window.MiBoxerCatalog;
+    if (!hostEl || !C || !partnerRem) return;
+    const pHex = String(partnerRem.hex || "").toUpperCase();
+    const pMod = this._resolveModel(partnerRem);
+    hostEl.innerHTML = C.renderModelSvg(pMod, { activeZone: this._selZone, uid: "compfp", facia: partnerRem.facia, touchZones: partnerRem.touch_zones });
+    this._mountOverlays(hostEl, partnerRem, this._selZone);
+
+    hostEl.querySelectorAll(".mbx-seg-hit").forEach((segEl) => {
+      const segAct = segEl.getAttribute("data-seg-act") || "";
+      if (!segAct) return;
+      segEl.style.cursor = "pointer";
+      segEl.onclick = (ev) => {
+        ev.stopPropagation();
+        const mSeg = segAct.match(/_(\d+)$/);
+        const segIdx = mSeg ? Number(mSeg[1]) : 1;
+        this._baseAct = segAct;
+        this._triggerVisualFeedback(partnerRem.hex, segAct, this._selZone, "ui", segIdx);
+        this._mirrorVirtualAcrossPair(partnerRem, segAct, segIdx, this._selZone);
+        this._throttledSend(partnerRem.hex, this._selZone, segAct, segIdx);
+        this._updateYaml();
+      };
+    });
+
+    const svgEl = hostEl.querySelector("svg");
+    const tz = normTouchZones(partnerRem.touch_zones);
+    const zBit = this._selZone < 16 ? (1 << this._selZone) : 0x8000;
+    if (svgEl && !(tz.hue_ring.enabled && ((tz.hue_ring.zone_mask ?? 0xFFFF) & zBit))) {
+      const wg = this._wheelGeometry(svgEl);
+      if (wg) {
+        const ringHit = document.createElementNS(MBX_SVG_NS, "circle");
+        ringHit.setAttribute("cx", wg.cx.toFixed(1));
+        ringHit.setAttribute("cy", wg.cy.toFixed(1));
+        ringHit.setAttribute("r", wg.rTrack.toFixed(1));
+        ringHit.setAttribute("fill", "none");
+        ringHit.setAttribute("stroke", "rgba(0,0,0,0.001)");
+        ringHit.setAttribute("stroke-width", (wg.rOut - wg.rIn + 6).toFixed(1));
+        ringHit.style.cursor = "crosshair";
+        svgEl.appendChild(ringHit);
+        ringHit.onclick = (ev) => {
+          ev.stopPropagation();
+          const pt = this._svgRootPoint(svgEl, ev.clientX, ev.clientY);
+          const visDeg = normDeg((Math.atan2(pt.y - wg.cy, pt.x - wg.cx) * 180) / Math.PI + 90);
+          const hubHue = this._visualDegToHubHue(pHex, visDeg);
+          this._triggerVisualFeedback(partnerRem.hex, "hue", this._selZone, "ui", hubHue, visDeg);
+          this._mirrorVirtualAcrossPair(partnerRem, "hue", hubHue, this._selZone);
+          this._throttledSend(partnerRem.hex, this._selZone, "hue", hubHue);
+        };
+      }
+    }
+
+    hostEl.querySelectorAll(".mbx-hit").forEach((el) => {
+      const act = el.getAttribute("data-act") || "";
+      const zAttr = el.getAttribute("data-zone");
+      if (act === "hue") return;
+      el.onclick = (ev) => {
+        ev.stopPropagation();
+        if (zAttr !== null && zAttr !== "") {
+          this._selZone = Number(zAttr);
+          this._activeZones[pHex] = this._selZone;
+          this._activeZones[String(primaryRem.hex || "").toUpperCase()] = this._selZone;
+          if (act === "zone") { this._refreshStudioView(); return; }
+        }
+        let sendAct = act === "zone_on" ? "on" : (act === "zone_off" ? "off" : act);
+        let sendVal = undefined;
+        if (ANALOG_ACTS.has(act) && svgEl) {
+          const pt = this._svgRootPoint(svgEl, ev.clientX, ev.clientY);
+          const bb = this._barBBox(el);
+          if (bb) {
+            const horiz = bb.width >= bb.height;
+            const ratio = horiz ? (pt.x - bb.x) / bb.width : (bb.y + bb.height - pt.y) / bb.height;
+            const pct = Math.round(Math.max(0, Math.min(1, ratio)) * 100);
+            sendVal = (act === "kelvin" || act === "color_temp") ? Math.round(370 - (pct / 100) * 217) : (act === "saturation" ? Math.round(100 - pct) : pct);
+            this._triggerVisualFeedback(partnerRem.hex, sendAct, this._selZone, "ui", sendVal, pct);
+            this._mirrorVirtualAcrossPair(partnerRem, sendAct, sendVal, this._selZone);
+            this._throttledSend(partnerRem.hex, this._selZone, sendAct, sendVal);
+            return;
+          }
+        }
+        this._triggerVisualFeedback(partnerRem.hex, sendAct, this._selZone, "ui");
+        this._mirrorVirtualAcrossPair(partnerRem, sendAct, sendVal, this._selZone);
+        this._throttledSend(partnerRem.hex, this._selZone, sendAct, sendVal);
+      };
+    });
+
+    this._renderOverlayLabelsOnSvg(svgEl, pHex);
+    this._renderAnalogIndicators(hostEl, pHex, this._selZone);
+  }
+
+  _mirrorVirtualAcrossPair(srcRem, act, val, zone) {
+    if (!srcRem || !window.MiLightRemoteStudio) return;
+    const pair = this._findLinkedPair(srcRem);
+    if (!pair) return;
+    const srcUp = String(srcRem.hex || "").toUpperCase();
+    const custUp = String(pair.custom.hex || "").toUpperCase();
+    const physUp = String(pair.physical.hex || "").toUpperCase();
+    if (srcUp === custUp) {
+      const cal = this._calibrations[physUp] || this._calibrations[custUp] || {};
+      const rev = window.MiLightRemoteStudio.resolveCustomToPhysicalAction
+        ? window.MiLightRemoteStudio.resolveCustomToPhysicalAction(act, val, zone, pair.custom.touch_zones, cal)
+        : { action: act, value: val, converted: false };
+      this._triggerVisualFeedback(pair.physical.hex, rev.action, zone, "ui", rev.value, rev.visDeg !== undefined ? rev.visDeg : rev.pct);
+      if (this._liveSend && !/^(hue|cct|sat|bri)_seg_\d+$/.test(act)) {
+        this._throttledSend(pair.physical.hex, zone, rev.action, rev.value);
+      }
+    } else if (srcUp === physUp) {
+      const cal = this._calibrations[custUp] || this._calibrations[physUp] || {};
+      const conv = window.MiLightRemoteStudio.resolvePhysicalToCustomAction
+        ? window.MiLightRemoteStudio.resolvePhysicalToCustomAction(act, val ?? -1, zone, pair.custom.touch_zones, cal)
+        : { action: act, value: val, converted: false };
+      this._triggerVisualFeedback(pair.custom.hex, conv.converted ? conv.action : act, zone, "ui", conv.converted ? conv.value : val);
+    }
   }
 
   _renderHaLinkBar() {
@@ -323,18 +485,27 @@ return false;
       const devId = Number(custRem.device_id || parseInt(String(custRem.hex || "0").replace(/^0x/i, ""), 16));
       const pId = physRem ? Number(physRem.device_id || parseInt(String(physRem.hex || "0").replace(/^0x/i, ""), 16)) : 0;
       const pHex = physRem ? String(physRem.hex || "") : "";
-      await fetch("http://192.168.7.121/api/remotes/studio_meta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ device_id: devId, hex_id: custRem.hex, linked_device_id: pId, linked_hex_id: pHex })
-      });
-      await this._mergeHubMetaIntoRemotes();
+      const payload = { device_id: devId, hex_id: custRem.hex, linked_device_id: pId, linked_hex_id: pHex };
+      let ok = false;
+      if (this._hass) {
+        try { await this._hass.callApi("POST", "milight_remote_studio/studio_meta", payload); ok = true; } catch (_) {}
+      }
+      if (!ok) {
+        await fetch(`${this._getHubUrl()}/api/remotes/studio_meta`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        }).catch(() => {});
+      }
+      custRem.linked_device_id = pId;
+      custRem.linked_hex_id = pHex;
+      if (pHex) this._pairViewMode = "split";
+      await this._loadRemotes();
       if (switchHex) this._selHex = switchHex;
       this._refreshStudioView();
     };
 
     if (isCustom) {
-      const physList = this._remotes.filter((r) => !isRemCustom(r) && String(r.hex || "").toUpperCase() !== curHexUp);
+      const reqShell = (window.MiBoxerCatalog && window.MiBoxerCatalog.resolveBaseHardwareId) ? window.MiBoxerCatalog.resolveBaseHardwareId(this._resolveModel(cur)) : "";
+      const physList = this._remotes.filter((r) => !isRemCustom(r) && String(r.hex || "").toUpperCase() !== curHexUp && this._isCompatPair(cur, r));
       const curLinkHex = String(cur.linked_hex_id || "").toUpperCase();
       const linkedPhysObj = physList.find((p) => String(p.hex || "").toUpperCase() === curLinkHex);
       box.innerHTML = `
@@ -345,7 +516,7 @@ return false;
           </div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <select id="haPhysLinkSel" style="flex:1;min-width:155px;padding:5px 8px;font-size:12px;border-radius:6px;">
-              <option value="">Unlinked (Virtual ${cur.hex} Only)</option>
+              <option value="">${physList.length ? `Unlinked (Virtual ${cur.hex} Only — Select ${reqShell} Hardware)` : `No ${reqShell} Hardware Registered (Virtual ${cur.hex} Only)`}</option>
               ${physList.map((p) => {
                 const phx = String(p.hex || "").toUpperCase();
                 return `<option value="${p.hex}" ${phx === curLinkHex ? 'selected' : ''}>${p.name || p.hex} (${p.hex} · ${p.visual_model || p.model || ''})</option>`;
@@ -364,7 +535,7 @@ return false;
       const jmp = box.querySelector("#haJumpPhysBtn");
       if (jmp) jmp.onclick = () => { this._selHex = curLinkHex; this._refreshStudioView(); };
     } else {
-      const custList = this._remotes.filter((r) => isRemCustom(r));
+      const custList = this._remotes.filter((r) => isRemCustom(r) && this._isCompatPair(r, cur));
       const linkedHere = custList.filter((r) => String(r.linked_hex_id || "").toUpperCase() === curHexUp);
       if (linkedHere.length) {
         const cObj = linkedHere[0];
@@ -681,8 +852,15 @@ sliderDefs.forEach(({ key, sel }) => {
 
     let needFullRebuild = false;
     if (isRf && this._remotes.some((r) => r.hex.toUpperCase() === hx)) {
-      if (prevHex !== hx || prevZone !== z) {
+      const curRem = this._remotes.find((r) => r.hex.toUpperCase() === prevHex);
+      const curPair = this._findLinkedPair(curRem);
+      const isPartnerInSplit = curPair && (this._pairViewMode || "split") === "split" &&
+        (String(curPair.custom.hex).toUpperCase() === hx || String(curPair.physical.hex).toUpperCase() === hx);
+      if (!isPartnerInSplit && (prevHex !== hx || prevZone !== z)) {
         this._selHex = hx;
+        this._selZone = z;
+        needFullRebuild = true;
+      } else if (isPartnerInSplit && prevZone !== z) {
         this._selZone = z;
         needFullRebuild = true;
       }
@@ -743,10 +921,28 @@ sliderDefs.forEach(({ key, sel }) => {
     this._renderAnalogIndicators(cardBox, hx, z, cleanAct);
     this._pulseHits(cardBox, act, z, cls);
 
-    if (this._selHex.toUpperCase() === hx) {
-      const fpBox = this.querySelector("#faceplateBox");
+    const fpBox = this.querySelector("#faceplateBox");
+    const bareBox = this.querySelector("#haBareLayer");
+    const overBox = this.querySelector("#haStencilLayer");
+    const selRemNow = this._remotes.find((r) => r.hex.toUpperCase() === this._selHex.toUpperCase());
+    const pairNow = this._findLinkedPair(selRemNow);
+    if (pairNow && bareBox && overBox) {
+      if (String(pairNow.physical.hex).toUpperCase() === hx) {
+        this._renderAnalogIndicators(bareBox, hx, z, cleanAct);
+        this._pulseHits(bareBox, act, z, cls);
+      }
+      if (String(pairNow.custom.hex).toUpperCase() === hx) {
+        this._renderAnalogIndicators(overBox, hx, z, cleanAct);
+        this._pulseHits(overBox, act, z, cls);
+      }
+    } else if (this._selHex.toUpperCase() === hx && fpBox) {
       this._renderAnalogIndicators(fpBox, hx, z, cleanAct);
       this._pulseHits(fpBox, act, z, cls);
+    }
+    const compBox = this.querySelector("#companionBox");
+    if (compBox && compBox.dataset && compBox.dataset.hexUp === hx) {
+      this._renderAnalogIndicators(compBox, hx, z, cleanAct);
+      this._pulseHits(compBox, act, z, cls);
     }
 
     const toast = this.querySelector("#liveToast");
@@ -778,7 +974,9 @@ sliderDefs.forEach(({ key, sel }) => {
       const visDeg = normDeg((Math.atan2(pt.y - wg.cy, pt.x - wg.cx) * 180) / Math.PI + 90);
       const hubHue = this._visualDegToHubHue(this._selHex, visDeg);
       this._baseAct = "hue";
+      const curR = this._remotes.find((x)=>x.hex.toUpperCase()===this._selHex.toUpperCase());
       this._triggerVisualFeedback(this._selHex, "hue", this._selZone, "ui", hubHue, visDeg);
+      this._mirrorVirtualAcrossPair(curR, "hue", hubHue, this._selZone);
       this._throttledSend(this._selHex, this._selZone, "hue", hubHue);
       this._updateYaml();
     };
@@ -816,7 +1014,9 @@ sliderDefs.forEach(({ key, sel }) => {
       // Convert visual 0..100% -> Hub value (for kelvin, 0% left = 370 warm mireds, 100% right = 153 cool mireds)
       const sendVal = key === "kelvin" ? Math.round(370 - (pct / 100) * (370 - 153)) : (key === "saturation" ? Math.round(100 - pct) : pct);
       this._baseAct = act;
+      const curR = this._remotes.find((x)=>x.hex.toUpperCase()===this._selHex.toUpperCase());
       this._triggerVisualFeedback(this._selHex, act, this._selZone, "ui", sendVal, pct);
+      this._mirrorVirtualAcrossPair(curR, act, sendVal, this._selZone);
       this._throttledSend(this._selHex, this._selZone, act, sendVal);
       this._updateYaml();
     };
@@ -1042,36 +1242,64 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
   _render() {
     this._entitiesPopulated = false;
     const cfg = (this._panel && this._panel.config) || {};
-    const hubUrl = cfg.hub_url || "http://192.168.7.121";
-    const twinUrl = cfg.twin_url || "http://192.168.6.196:8588";
+    const hubUrl = (cfg.hub_url || "http://milight-hub.local").replace(/\/+$/, "");
+    const twinUrl = cfg.twin_url || `${window.location.protocol}//${window.location.hostname}:8588`;
     this.innerHTML = `
       <style>
-        .wrap { padding: 20px; font-family: sans-serif; color: var(--primary-text-color); max-width: 1260px; }
-        .hdr { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-        .hdr h1 { margin: 0; font-size: 22px; }
-        .hdr p { margin: 4px 0 0; color: var(--secondary-text-color); font-size: 13px; }
-        .actions, .pills { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        button { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--divider-color); background: var(--primary-color); color: var(--text-primary-color, #fff); cursor: pointer; font-weight: 600; font-size: 13px; }
-        button.sec, .pill { background: var(--card-background-color); color: var(--primary-text-color); }
-        .pill.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
-        .rem-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
-        .rem-card { display: flex; align-items: center; gap: 14px; background: var(--card-background-color); border: 2px solid var(--divider-color); border-radius: 14px; padding: 12px 16px; cursor: pointer; transition: border-color .15s, transform .12s; }
-        .rem-card:hover { transform: translateY(-1px); }
-        .rem-card.selected { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56,189,248,.25); }
-        .rem-thumb { width: 74px; height: 112px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .rem-thumb svg { max-width: 72px; max-height: 110px; width: auto; height: auto; pointer-events: none; }
-        .rem-card h3 { margin: 0 0 4px; font-size: 15px; }
-        .meta { font-size: 12px; color: var(--secondary-text-color); line-height: 1.4; }
-        .src-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid var(--divider-color); }
+        :host { display: block; height: 100%; box-sizing: border-box; }
+        .app-shell {
+          margin: 10px 14px; padding: 14px 16px; border-radius: 16px;
+          background: var(--card-background-color); border: 1px solid var(--divider-color);
+          box-shadow: 0 6px 24px rgba(0,0,0,0.06); font-family: system-ui, -apple-system, sans-serif;
+          color: var(--primary-text-color); display: flex; flex-direction: column;
+          height: calc(100vh - 22px); min-height: 680px; box-sizing: border-box; overflow: hidden;
+        }
+        @media (max-width: 1100px) { .app-shell { height: auto; overflow: visible; } }
+        .hdr { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--divider-color); margin-bottom: 10px; flex-shrink: 0; }
+        .hdr h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+        .hdr p { margin: 2px 0 0; color: var(--secondary-text-color); font-size: 12px; }
+        .actions, .pills { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+        .app-shell button:not(.mlrs-tour-btn):not(.mlrs-tour-reopen):not(.mlrs-peel-btn) {
+          padding: 7px 12px; border-radius: 8px; border: 1px solid var(--divider-color);
+          background: var(--primary-color); color: var(--text-primary-color, #fff);
+          cursor: pointer; font-weight: 700; font-size: 12px;
+        }
+        .app-shell button.sec, .app-shell .pill { background: var(--secondary-background-color); color: var(--primary-text-color); }
+        .app-shell .pill.active { background: #0284c7; color: #fff; border-color: #0284c7; }
+        .status-line { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--secondary-text-color); margin-bottom: 8px; flex-shrink: 0; }
+
+        /* 3-Frame Internal Workspace */
+        .workspace {
+          display: grid; grid-template-columns: 265px minmax(380px, 470px) 1fr;
+          gap: 14px; flex: 1; min-height: 0; overflow: hidden;
+        }
+        @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; overflow: visible; } }
+        .sub-frame {
+          background: var(--secondary-background-color); border: 1px solid var(--divider-color);
+          border-radius: 13px; padding: 12px; display: flex; flex-direction: column;
+          min-height: 0; overflow-y: auto; box-sizing: border-box;
+        }
+        .sub-frame-hdr { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--divider-color); flex-shrink: 0; }
+        .sub-frame-title { font-size: 13.5px; font-weight: 800; margin: 0; }
+
+        /* Left Frame: Vertical Remote Selector List */
+        .rem-strip { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; padding-right: 2px; }
+        .rem-card { display: flex; align-items: center; gap: 10px; background: var(--card-background-color); border: 1.5px solid var(--divider-color); border-radius: 11px; padding: 8px 10px; cursor: pointer; transition: border-color .14s, box-shadow .14s; }
+        .rem-card:hover { border-color: #38bdf8; }
+        .rem-card.selected { border-color: #0284c7; box-shadow: 0 0 0 2px rgba(2,132,199,.20); }
+        .rem-thumb { width: 42px; height: 64px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rem-thumb svg { max-width: 40px; max-height: 62px; width: auto; height: auto; pointer-events: none; }
+        .rem-card h3 { margin: 0 0 2px; font-size: 13px; font-weight: 700; }
+        .meta { font-size: 11.5px; color: var(--secondary-text-color); line-height: 1.35; }
+        .telem-foot { margin-top: 3px; font-family: monospace; font-size: 10.5px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .src-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800; border: 1px solid var(--divider-color); }
         .src-pill.rf { background: #dcfce7; color: #166534; border-color: #86efac; }
         .src-pill.ui { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-        .telem-foot { margin-top: 5px; font-family: monospace; font-size: 11px; color: var(--secondary-text-color); }
-        .studio { display: grid; grid-template-columns: minmax(330px, 390px) 1fr; gap: 18px; align-items: start; }
-        @media (max-width: 860px) { .studio { grid-template-columns: 1fr; } }
-        .card { background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 14px; padding: 18px; }
-        .card h3 { margin: 0 0 6px; font-size: 16px; }
-        #faceplateBox { display: flex; justify-content: center; align-items: center; min-height: 330px; padding: 8px 0; user-select: none; }
-        #faceplateBox svg { max-width: 260px; height: auto; filter: drop-shadow(0 10px 22px rgba(0,0,0,.28)); }
+
+        /* Center Frame: Peel-Back Faceplate Stage */
+        #faceplateBox { display: flex; justify-content: center; align-items: center; flex: 1; min-height: 360px; padding: 6px; user-select: none; overflow: hidden; }
+        #faceplateBox svg { width: auto; height: 100%; max-width: 340px; max-height: calc(100vh - 285px); min-height: 320px; filter: drop-shadow(0 10px 22px rgba(0,0,0,.24)); }
         .mbx-hit { cursor: pointer; }
         .mbx-selected:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > rect,
         .mbx-selected:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > circle,
@@ -1081,161 +1309,270 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         .mbx-hit.fire-rf:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > circle,
         rect.mbx-hit.fire-rf:not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]),
         circle.mbx-hit.fire-rf:not([data-act="hue"]),
-        .mbx-seg-hit.fire-rf {
-          fill: #86efac !important; stroke: #15803d !important; stroke-width: 3px !important;
-          filter: drop-shadow(0 0 10px rgba(34,197,94,.85)) !important;
-        }
+        .mbx-seg-hit.fire-rf { fill: #86efac !important; stroke: #15803d !important; stroke-width: 3px !important; filter: drop-shadow(0 0 10px rgba(34,197,94,.85)) !important; }
         .mbx-hit.fire-ui:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > rect,
         .mbx-hit.fire-ui:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > circle,
         rect.mbx-hit.fire-ui:not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]),
         circle.mbx-hit.fire-ui:not([data-act="hue"]),
-        .mbx-seg-hit.fire-ui {
-          fill: #fde68a !important; stroke: #d97706 !important; stroke-width: 3px !important;
-          filter: drop-shadow(0 0 10px rgba(245,158,11,.85)) !important;
-        }
-        .live-toast { min-height: 24px; margin-top: 8px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-align: center; opacity: 0; transition: opacity .15s; display: inline-block; }
+        .mbx-seg-hit.fire-ui { fill: #fde68a !important; stroke: #d97706 !important; stroke-width: 3px !important; filter: drop-shadow(0 0 10px rgba(245,158,11,.85)) !important; }
+        .live-toast { min-height: 20px; margin-top: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-align: center; opacity: 0; transition: opacity .15s; display: inline-block; }
         .live-toast.show { opacity: 1; }
         .live-toast.rf { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
         .live-toast.ui { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-        .legend { display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px; font-size: 11px; color: var(--secondary-text-color); flex-wrap: wrap; }
-        .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 14px 0; }
-        label { display: block; font-size: 11px; color: var(--secondary-text-color); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
-        select, input[type="text"] { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); font-size: 13px; }
-        .badge { display: inline-block; padding: 4px 11px; border-radius: 999px; background: rgba(56,189,248,.16); color: #38bdf8; font-weight: 700; font-size: 12px; }
-        pre { background: var(--secondary-background-color); border: 1px solid var(--divider-color); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 12px; margin: 12px 0 0; }
-        #status { margin-bottom: 12px; font-size: 13px; color: var(--secondary-text-color); }
+        .legend { display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 4px; font-size: 11px; color: var(--secondary-text-color); }
+
+        /* Right Frame: Clean Tabbed Inspector */
+        .insp-tabs { display: flex; gap: 5px; flex-wrap: wrap; background: var(--card-background-color); padding: 4px; border-radius: 10px; border: 1px solid var(--divider-color); margin-bottom: 12px; flex-shrink: 0; }
+        .insp-tab { flex: 1; min-width: 115px; padding: 7px 10px !important; border-radius: 7px !important; border: none !important; background: transparent !important; color: var(--secondary-text-color) !important; font-size: 12px !important; font-weight: 800 !important; text-align: center; cursor: pointer; }
+        .insp-tab.active { background: #0284c7 !important; color: #ffffff !important; box-shadow: 0 2px 6px rgba(2,132,199,0.25); }
+        .insp-pane { background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 11px; padding: 14px; flex: 1; overflow-y: auto; }
+
+        .vis-ctrl-hero { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px; border: 1.5px solid rgba(56,189,248,0.45); background: rgba(2,132,199,0.07); margin-bottom: 12px; }
+        .vis-keycap { width: 54px; height: 54px; border-radius: 11px; background: var(--card-background-color); border: 2px solid #0284c7; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; color: var(--primary-text-color); }
+        .gest-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 6px 0 12px; }
+        .gest-card { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 9px; border: 1.5px solid var(--divider-color); background: var(--secondary-background-color); cursor: pointer; }
+        .gest-card.active, .app-shell .gest-card.pill.active { border-color: #0284c7 !important; background: #0284c7 !important; color: #ffffff !important; box-shadow: 0 3px 10px rgba(2,132,199,0.25); }
+        .gest-card.active .meta, .app-shell .gest-card.pill.active .meta { color: #e0f2fe !important; font-weight: 600; }
+        .gest-test-btn { padding: 4px 8px !important; font-size: 11px !important; border-radius: 6px !important; background: var(--card-background-color) !important; color: var(--primary-text-color) !important; border: 1px solid var(--divider-color) !important; }
+        .dom-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 6px 0 8px; }
+        .dom-chip { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); cursor: pointer; }
+        .dom-chip.active { background: #0284c7; color: #fff; border-color: #0284c7; }
+        .act-tiles { display: grid; grid-template-columns: repeat(5, minmax(75px, 1fr)); gap: 6px; margin-top: 8px; }
+        @media (max-width: 900px) { .act-tiles { grid-template-columns: repeat(2, 1fr); } }
+        .act-tile { padding: 7px 6px; border-radius: 8px; border: 1.5px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); font-size: 11.5px; font-weight: 700; text-align: center; cursor: pointer; }
+        .act-tile.active { border-color: #15803d !important; background: #16a34a !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(22,163,74,0.28); }
+        .saved-bind-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .saved-bind-item { padding: 6px 10px; border-radius: 8px; background: rgba(22,163,74,0.09); border: 1px solid rgba(22,163,74,0.35); font-size: 11.5px; }
+
+        .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 10px; margin: 10px 0; }
+        label { display: block; font-size: 10.5px; font-weight: 700; color: var(--secondary-text-color); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+        select, input[type="text"] { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); font-size: 12.5px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #0284c7; color: #ffffff; font-weight: 800; font-size: 11px; }
+        pre { background: var(--secondary-background-color); border: 1px solid var(--divider-color); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 11.5px; margin: 8px 0 0; }
       </style>
-      <div class="wrap">
+
+      <div class="app-shell">
         <div class="hdr">
           <div>
             <h1>Mi-Light Visual Remote &amp; Panel Studio</h1>
-            <p>True 1:1 finger-aligned wheel &amp; slider reticles (<span class="src-pill rf">🟢 Physical RF</span> / <span class="src-pill ui">🟠 Virtual UI</span>).</p>
+            <p>1:1 finger-aligned reticles &amp; peelable capacitive stencils (<span class="src-pill rf">🟢 Physical RF</span> <span class="src-pill ui">🟠 Virtual UI</span>)</p>
           </div>
           <div class="actions">
-            <label style="display:inline-flex;align-items:center;gap:6px;margin:0;text-transform:none;font-size:12px;cursor:pointer;">
-              <input id="liveSendChk" type="checkbox" checked /> Live Dispatch on Click/Drag
+            <label style="display:inline-flex;align-items:center;gap:5px;margin:0;text-transform:none;font-size:12px;cursor:pointer;">
+              <input id="liveSendChk" type="checkbox" checked /> Live Dispatch
             </label>
-            <button id="refreshBtn">Sync Hub Remotes</button>
-            <a href="${hubUrl}/#/remotes" target="_blank" rel="noreferrer"><button class="sec" type="button">Hub #/remotes</button></a>
-            <button id="openTwinBtn" class="sec" type="button">3D Twin (:8588) ↗</button>
+            <button id="openHubStencilStudioBtn" type="button" style="background:#0f172a;color:#fff;">🎨 Stencil Studio</button>
+            <button id="refreshBtn" type="button">🔄 Sync Remotes</button>
+            <a href="${hubUrl}/#/remotes" target="_blank" rel="noreferrer" style="text-decoration:none;"><button class="sec" type="button">Hub #/remotes ↗</button></a>
+            <button id="openTwinBtn" class="sec" type="button">🏠 3D Twin ↗</button>
           </div>
         </div>
-        <div id="status">Loading registered remotes...</div>
-        <div id="remStrip" class="rem-strip"></div>
-        <div class="studio">
-          <div class="card" style="text-align:center;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-              <h3 id="fpTitle" style="margin:0;">Hardware Faceplate</h3>
+
+        <!-- Dedicated Framed Guided Showcase Card -->
+        <div id="haGuidedTourBar" style="flex-shrink:0;"></div>
+        <div class="status-line"><span id="status">Loading registered remotes...</span></div>
+
+        <!-- 3-Column Internal Resizing Workspace -->
+        <div class="workspace">
+          <!-- FRAME 1: Remotes Sidebar -->
+          <div class="sub-frame">
+            <div class="sub-frame-hdr">
+              <h3 class="sub-frame-title">1. Remotes &amp; Stencils</h3>
+            </div>
+            <div id="remStrip" class="rem-strip"></div>
+          </div>
+
+          <!-- FRAME 2: Interactive Peel-Back Faceplate Stage -->
+          <div class="sub-frame" style="text-align:center;">
+            <div class="sub-frame-hdr">
+              <div style="text-align:left;min-width:0;">
+                <h3 class="sub-frame-title" id="fpTitle" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Hardware Faceplate</h3>
+                <div id="fpSub" class="meta" style="font-size:11px;">Click or drag wheel, sliders, or stencil pads</div>
+              </div>
               <span id="fpSrcPill" class="src-pill ui">🟠 Ready</span>
             </div>
-            <div id="fpSub" class="meta" style="margin:4px 0 6px;">Drag or tap wheel, sliders, buttons, or zones</div>
-            <div id="haLinkBar" style="margin-bottom:10px;"></div>
+            <div id="fpPrimaryTag" style="font-size:11px;font-weight:700;margin-bottom:4px;"></div>
+            <div id="haPairModeTabs" style="margin-bottom:6px;"></div>
             <div id="faceplateBox"></div>
-            <div id="calBanner"></div>
+            <div id="companionWrap" style="display:none;"><div id="companionBox"></div></div>
             <div class="legend">
-              <span>🟢 Green Puck/Glow = Physical RF</span>
-              <span>&middot;</span>
-              <span>🟠 Amber Puck/Glow = Virtual Screen</span>
+              <span>🟢 RF Touch</span><span>&middot;</span><span>🟠 Virtual Click</span>
             </div>
             <div><span id="liveToast" class="live-toast"></span></div>
           </div>
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-              <h3>Visual Gesture &amp; Slice &rarr; Home Assistant Binding</h3>
-              <span id="selSummary" class="badge"></span>
+
+          <!-- FRAME 3: Tabbed Focused Inspector (One Task at a Time!) -->
+          <div class="sub-frame">
+            <div class="insp-tabs" id="haInspTabs">
+              <button type="button" class="insp-tab active" data-itab="mapper">🎯 1. Button Mapper</button>
+              <button type="button" class="insp-tab" data-itab="link">🔗 2. Hardware Link &amp; Calibrate</button>
+              <button type="button" class="insp-tab" data-itab="pod">🖨️ 3. Stencil &amp; 1:1 Print / POD</button>
+              <button type="button" class="insp-tab" data-itab="yaml">📄 4. YAML</button>
             </div>
-            <div style="margin-top:12px;">
-              <label>Tap / Hold Gesture Modifier (for physical buttons)</label>
-              <div class="pills" id="tapPills">
-                <button type="button" class="pill active" data-tap="single">1x Single Tap</button>
-                <button type="button" class="pill" data-tap="double">2x Double Tap</button>
-                <button type="button" class="pill" data-tap="triple">3x Triple Tap</button>
-                <button type="button" class="pill" data-tap="long">Long Hold (Night / White)</button>
-              </div>
-            </div>
-            <div class="field-grid">
-              <div><label>Target Home Assistant Entity</label><select id="mapEntity"></select></div>
-              <div><label>Action to Perform</label><select id="mapService"><option value="homeassistant.toggle">Toggle</option><option value="homeassistant.turn_on">Turn On</option><option value="homeassistant.turn_off">Turn Off</option><option value="cover.open_cover">Open Cover</option><option value="cover.close_cover">Close Cover</option></select></div>
-              <div><label>Automation Name (Optional)</label><input id="autoAlias" type="text" placeholder="e.g. B8 Wall Panel Z1 2x ON -> Split AC" /></div>
-            </div>
-            <div class="pills" style="margin-top:10px;">
-              <button id="saveAutoBtn" type="button">Save Directly to HA Automations</button>
-              <button id="testVirtualBtn" class="sec" type="button">Fire Virtual RF/MQTT Event</button>
-              <button id="runEntityBtn" class="sec" type="button">Test Target Entity</button>
-              <button id="copyYamlBtn" class="sec" type="button">Copy YAML</button>
-            </div>
-            <pre id="yamlPreview"></pre>
-            <hr style="border:0;border-top:1px solid var(--divider-color);margin:18px 0;"/>
-            <h3>Overlay Labels, Accessibility &amp; 1:1 Print / POD Configurator</h3>
-            <p class="meta" style="margin:4px 0 12px;">Customize labels or accessibility symbols, verify exact millimeter sizing, and export 1:1 print or POD order payloads.</p>
-            <div class="field-grid">
-              <div>
-                <label>Overlay &amp; Accessibility Theme</label>
-                <select id="overlayThemeSel">
-                  <option value="standard">Standard Overlay</option>
-                  <option value="high_contrast">High-Contrast Labels</option>
-                  <option value="accessibility">Large-Print / Accessibility</option>
-                </select>
-              </div>
-              <div>
-                <label>Print / Sticker Material</label>
-                <select id="podMaterialSel">
-                  <option value="peelable_matte_vinyl">Peelable / Repositionable Matte Vinyl</option>
-                  <option value="permanent_matte_vinyl">Permanent Matte Vinyl</option>
-                  <option value="laminated_pet">Laminated PET Decal</option>
-                  <option value="die_cut_stencil">Die-Cut Stencil</option>
-                </select>
-              </div>
-              <div>
-                <label>Panel Button / Zone / Slider Segment</label>
-                <select id="posTargetSel"></select>
-              </div>
-              <div>
-                <label>Icon for Position / Segment</label>
-                <select id="customIconSel">
-                  <option value="">(None)</option>
-                  <option value="💡">💡 Light / Zone</option>
-                  <option value="🪟">🪟 Blind / Cover</option>
-                  <option value="🌡️">🌡️ Climate / Temp</option>
-                  <option value="🌀">🌀 Fan / Air</option>
-                  <option value="🎬">🎬 Scene / Mode</option>
-                  <option value="🌙">🌙 Night / Sleep</option>
-                  <option value="☀️">☀️ Bright / Day</option>
-                  <option value="⚡">⚡ Power / Boost</option>
-                  <option value="🔊">🔊 Audio / Media</option>
-                  <option value="🔒">🔒 Lock / Security</option>
-                </select>
-              </div>
-              <div>
-                <label>Custom Text Label</label>
-                <div style="display:flex;gap:6px;">
-                  <input id="customLabelInp" type="text" placeholder="e.g. Patio Blind or Zone 1" />
-                  <button id="applyLabelBtn" class="sec" type="button" style="white-space:nowrap;">Apply</button>
+
+            <!-- TAB 1: Visual Button Mapper -->
+            <div class="insp-pane" data-ipane="mapper">
+              <div class="vis-ctrl-hero">
+                <div class="vis-keycap" id="visKeycapBox">🔘</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <strong id="visCtrlTitle" style="font-size:13.5px;">Zone 1 · ON Button</strong>
+                    <span id="selSummary" class="badge"></span>
+                  </div>
+                  <div id="visCtrlHint" class="meta" style="margin-top:2px;">Click any pad, zone, or wheel slice on the center faceplate to select it.</div>
                 </div>
               </div>
+
+              <label>Step A — Choose Gesture &amp; Click ▶ Test to Simulate Live</label>
+              <div class="gest-grid" id="tapPills">
+                <div class="gest-card active pill" data-tap="single">
+                  <div><div style="font-weight:800;font-size:12px;">👆 Single Tap (1×)</div><div class="meta" style="font-size:10.5px;">Instant press</div></div>
+                  <button type="button" class="gest-test-btn" data-test-tap="single">▶ Test</button>
+                </div>
+                <div class="gest-card pill" data-tap="double">
+                  <div><div style="font-weight:800;font-size:12px;">✌️ Double Tap (2×)</div><div class="meta" style="font-size:10.5px;">Quick 2-press</div></div>
+                  <button type="button" class="gest-test-btn" data-test-tap="double">▶ Test</button>
+                </div>
+                <div class="gest-card pill" data-tap="triple">
+                  <div><div style="font-weight:800;font-size:12px;">🤟 Triple Tap (3×)</div><div class="meta" style="font-size:10.5px;">3-press scene</div></div>
+                  <button type="button" class="gest-test-btn" data-test-tap="triple">▶ Test</button>
+                </div>
+                <div class="gest-card pill" data-tap="long">
+                  <div><div style="font-weight:800;font-size:12px;">⏱️ Long Hold</div><div class="meta" style="font-size:10.5px;">Hold ~0.7s</div></div>
+                  <button type="button" class="gest-test-btn" data-test-tap="long">▶ Test</button>
+                </div>
+              </div>
+
+              <label>Step B — Target Home Assistant Device &amp; Action</label>
+              <div class="dom-chips" id="haDomChips">
+                <span class="dom-chip active" data-dom="all">All</span>
+                <span class="dom-chip" data-dom="light">💡 Lights</span>
+                <span class="dom-chip" data-dom="fan">🌀 Fans</span>
+                <span class="dom-chip" data-dom="climate">❄️ Climate</span>
+                <span class="dom-chip" data-dom="cover">🪟 Covers</span>
+                <span class="dom-chip" data-dom="switch">🔌 Switches</span>
+                <span class="dom-chip" data-dom="scene">🎬 Scenes</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select id="mapEntity" style="flex:1;"></select>
+                <button id="runEntityBtn" class="sec" type="button" style="white-space:nowrap;">▶ Test Device</button>
+              </div>
+              <div class="act-tiles" id="haActTiles">
+                <div class="act-tile active" data-svc="homeassistant.toggle">🔄 Toggle</div>
+                <div class="act-tile" data-svc="homeassistant.turn_on">🟢 Turn ON</div>
+                <div class="act-tile" data-svc="homeassistant.turn_off">⚫ Turn OFF</div>
+                <div class="act-tile" data-svc="cover.open_cover">⬆️ Open</div>
+                <div class="act-tile" data-svc="cover.close_cover">⬇️ Close</div>
+              </div>
+              <select id="mapService" style="display:none;"><option value="homeassistant.toggle">Toggle</option><option value="homeassistant.turn_on">Turn On</option><option value="homeassistant.turn_off">Turn Off</option><option value="cover.open_cover">Open Cover</option><option value="cover.close_cover">Close Cover</option></select>
+
+              <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input id="autoAlias" type="text" placeholder="Optional automation label (auto-named if blank)" style="flex:1;min-width:180px;" />
+                <button id="saveAutoBtn" type="button" style="background:#16a34a;border-color:#15803d;color:#fff;padding:8px 16px;">✨ Save Mapping to HA</button>
+              </div>
+              <div id="savedBindList" class="saved-bind-list"></div>
             </div>
-            <div id="podSpecsLine" class="meta" style="margin-bottom:10px;font-weight:600;"></div>
-            <div class="pills">
-              <button id="openHubStencilStudioBtn" type="button" style="background:#0f172a;color:#fff;font-weight:700">🎨 Open Custom Remote &amp; Stencil Studio</button>
-              <div style="width:100%;margin:8px 0;padding:10px 12px;border-radius:8px;border:1px solid rgba(2,132,199,0.35);background:rgba(2,132,199,0.08);font-size:12px;line-height:1.45"><b>💡 Showcase Tips &amp; Reference Remotes:</b> Select <code>0x3DB0</code> (<b>1-Zone Suite B0</b>), <code>0x3DB8</code> (<b>8-Room Estate B8</b>), or <code>0x3DB4</code> (<b>Matte B4-B</b>) on the left to inspect how <b>Segmented Sliders/Rings</b> + <b>Short-Tap Step Cycling (1→6)</b> + <b>Long-Hold Toggle</b> let a single button drive multi-speed fans, blinds &amp; AC—or click <b>Open 3D Smart Home</b> above for Interactive Tour Tips 11 &amp; 12!</div>
-              <button id="dlSvg1to1Btn" class="sec" type="button">Download 1:1 SVG</button>
-              <button id="dlStencilSvgBtn" class="sec" type="button">Download 1:1 Stencil SVG</button>
-              <button id="openPrintSheetBtn" class="sec" type="button">Print Sheet (10mm Ruler)</button>
-              <button id="copyPodJsonBtn" class="sec" type="button">Copy POD Order JSON</button>
-              <button id="dlPodJsonBtn" class="sec" type="button">Download POD JSON</button>
+
+            <!-- TAB 2: Hardware Pairing & Physical Finger Calibration -->
+            <div class="insp-pane" data-ipane="link" style="display:none;">
+              <h4 style="margin:0 0 6px;font-size:14px;">🔗 Two-Way Physical Panel &amp; Custom Stencil Pairing</h4>
+              <p class="meta" style="margin:0 0 10px;">Pair a custom stencil exclusively with its matching base hardware shell so physical 2.4 GHz touches animate your custom stencil &amp; peel-back view.</p>
+              <div id="haLinkBar" style="margin-bottom:14px;"></div>
+              <hr style="border:0;border-top:1px solid var(--divider-color);margin:14px 0;" />
+              <h4 style="margin:0 0 6px;font-size:14px;">🎯 Physical Capacitive Wheel &amp; Slider Calibration</h4>
+              <p class="meta" style="margin:0 0 8px;">Align your physical MiBoxer glass touch ring (12 o'clock &amp; 3 o'clock) and slider endpoints 1:1 with the visual reticle.</p>
+              <div id="calBanner"></div>
+            </div>
+
+            <!-- TAB 3: Stencil Labels, Accessibility & 1:1 Print / POD Export -->
+            <div class="insp-pane" data-ipane="pod" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                <div>
+                  <h4 style="margin:0;font-size:14px;">🖨️ Stencil Designer &amp; 1:1 Millimeter Print / POD</h4>
+                  <div class="meta">Design full custom stencils or export calibrated 1:1 vector decals.</div>
+                </div>
+                <button id="openHubStencilStudioBtn2" type="button" style="background:#0f172a;color:#fff;">🎨 Launch Fullscreen Stencil Studio</button>
+              </div>
+              <div class="field-grid">
+                <div>
+                  <label>Overlay &amp; Accessibility Theme</label>
+                  <select id="overlayThemeSel">
+                    <option value="standard">Standard Overlay</option>
+                    <option value="high_contrast">High-Contrast Labels</option>
+                    <option value="accessibility">Large-Print / Accessibility</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Print / Sticker Material</label>
+                  <select id="podMaterialSel">
+                    <option value="peelable_matte_vinyl">Peelable / Repositionable Matte Vinyl</option>
+                    <option value="permanent_matte_vinyl">Permanent Matte Vinyl</option>
+                    <option value="laminated_pet">Laminated PET Decal</option>
+                    <option value="die_cut_stencil">Die-Cut Stencil</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Quick Badge Target</label>
+                  <select id="posTargetSel"></select>
+                </div>
+                <div>
+                  <label>Quick Badge Icon &amp; Text</label>
+                  <div style="display:flex;gap:5px;">
+                    <select id="customIconSel" style="width:90px;">
+                      <option value="">None</option>
+                      <option value="💡">💡</option><option value="🪟">🪟</option><option value="🌡️">🌡️</option>
+                      <option value="🌀">🌀</option><option value="🎬">🎬</option><option value="🌙">🌙</option>
+                      <option value="☀️">☀️</option><option value="⚡">⚡</option><option value="🔒">🔒</option>
+                    </select>
+                    <input id="customLabelInp" type="text" placeholder="Label" />
+                    <button id="applyLabelBtn" class="sec" type="button">Set</button>
+                  </div>
+                </div>
+              </div>
+              <div id="podSpecsLine" class="meta" style="margin:10px 0;padding:8px 10px;border-radius:8px;background:var(--secondary-background-color);font-weight:700;"></div>
+              <div class="pills">
+                <button id="dlSvg1to1Btn" type="button">⬇ Download 1:1 SVG</button>
+                <button id="dlStencilSvgBtn" class="sec" type="button">⬇ Download 1:1 Stencil Cut SVG</button>
+                <button id="openPrintSheetBtn" class="sec" type="button">🖨️ Print Sheet (10mm Ruler)</button>
+                <button id="dlPodJsonBtn" class="sec" type="button">📦 Download POD JSON</button>
+                <button id="copyPodJsonBtn" class="sec" type="button">📋 Copy POD JSON</button>
+              </div>
+            </div>
+
+            <!-- TAB 4: Optional Generated YAML -->
+            <div class="insp-pane" data-ipane="yaml" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+                <div class="meta">Optional Home Assistant Automation YAML (updates live from Tab 1):</div>
+                <div class="pills">
+                  <button id="copyYamlBtn" class="sec" type="button">📋 Copy YAML</button>
+                  <button id="testVirtualBtn" class="sec" type="button">📡 Fire Virtual Event</button>
+                </div>
+              </div>
+              <pre id="yamlPreview"></pre>
             </div>
           </div>
         </div>
       </div>`;
 
     try { window.name = "milight_ha_studio_parent"; } catch (_) {}
+        const switchHaInspTab = (tabName) => {
+      this._activeInspTab = tabName;
+      this.querySelectorAll("#haInspTabs .insp-tab").forEach((b) => b.classList.toggle("active", b.dataset.itab === tabName));
+      this.querySelectorAll(".insp-pane[data-ipane]").forEach((p) => { p.style.display = p.dataset.ipane === tabName ? "block" : "none"; });
+    };
+    this._switchInspTab = switchHaInspTab;
+    this.querySelectorAll("#haInspTabs .insp-tab").forEach((b) => {
+      b.onclick = () => switchHaInspTab(b.dataset.itab);
+    });
+    const stBtn2 = this.querySelector("#openHubStencilStudioBtn2");
+    if (stBtn2) stBtn2.onclick = () => this.querySelector("#openHubStencilStudioBtn")?.click();
     const stBtn = this.querySelector("#openHubStencilStudioBtn");
     if (stBtn) stBtn.onclick = () => {
-      const r = (this._remotes || {})[this._selHex] || {};
+      const r = (this._remotes || []).find((x) => String(x.hex || "").toUpperCase() === String(this._selHex || "").toUpperCase()) || this._remotes[0] || {};
       const mod = this._resolveModel(r);
       if (!window.MiLightRemoteStudio) { alert("Hub Remote Studio script not loaded yet."); return; }
       window.MiLightRemoteStudio.openFaciaDesigner({
-        hubUrl: "http://192.168.7.121",
+        hubUrl: this._getHubUrl(),
         model: mod,
         hexId: this._selHex,
         remoteName: r.name || this._selHex,
@@ -1262,11 +1599,73 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
     };
     this.querySelector("#liveSendChk").onchange = (e) => { this._liveSend = e.target.checked; };
     this.querySelector("#refreshBtn").onclick = () => this._loadRemotes();
+    window.__MLRS_STAGE_DOWNLOAD = async (filename, content, mime) => {
+      if (!this._hass) return null;
+      const res = await this._hass.callApi("POST", "milight_remote_studio/download_stage", { filename, content, mime });
+      return res && res.url ? res.url : null;
+    };
+
+    const tourMount = this.querySelector("#haGuidedTourBar");
+    if (tourMount && window.MiLightRemoteStudio && window.MiLightRemoteStudio.mountShowcaseTour) {
+      window.MiLightRemoteStudio.mountShowcaseTour(tourMount, {
+        tourId: "ha_studio_main",
+        steps: [
+          { title: "Live 2.4 GHz RF vs Virtual Screen Reticles", body: "Physical MiBoxer wall-panel touches glow Green (RF) while screen clicks/drags glow Amber (UI) with 1:1 finger tracking.", actionLabel: "Pulse Live Demo", onAction: () => { const a = this._computedAction(); this._triggerVisualFeedback(this._selHex, a, this._selZone, "ui"); } },
+          { title: "Real-World Peel-Back Custom Stencils", body: "Select 0x3DB8 (3D Estate B8) and peel back the custom vinyl decal to inspect the bare factory B8 glass panel paired underneath.", actionLabel: "Peel Back 0x3DB8 (55%)", onAction: () => { const r = (this._remotes||[]).find(x=>String(x.hex).toUpperCase()==="0X3DB8"); if (r) { this._selHex = r.hex; this._peelPct = 55; this._refreshStudioView(); } } },
+          { title: "Visual Button & Gesture Mapper (Zero YAML Required)", body: "Click any pad or wheel slice on the remote, test 1x / 2x / 3x / Hold gestures with the ▶ Test buttons, and save directly to HA Automations.", actionLabel: "Test 2x Double Tap", onAction: () => { const b = this.querySelector('[data-test-tap="double"]'); if (b) b.click(); } },
+          { title: "Physical Finger Position Calibration", body: "Use Calibrate Wheel + Sliders under any physical remote so raw MiBoxer capacitive angles align 1:1 with screen clock degrees.", actionLabel: "Highlight Calibration", onAction: () => { if (this._switchInspTab) this._switchInspTab("link"); } },
+          { title: "Fullscreen Capacitive Stencil Studio", body: "Design custom multi-zone room icons, mask unused buttons, and configure Step-Cycle (1 to 6) + Long-Hold pads.", actionLabel: "Open Stencil Studio", onAction: () => { this.querySelector("#openHubStencilStudioBtn")?.click(); } },
+          { title: "1:1 Millimeter SVG, 10 mm Ruler Print & POD JSON", body: "Export true-scale 1:1 vector stencils (extension-safe download) or print sheets with a 10 mm verification box.", actionLabel: "Download 1:1 SVG", onAction: () => { if (this._switchInspTab) this._switchInspTab("pod"); this.querySelector("#dlSvg1to1Btn")?.click(); } }
+        ]
+      });
+    }
+
+    this.querySelectorAll("#haMapperTabs .mapper-tab").forEach((tb) => {
+      tb.onclick = () => {
+        const isVis = tb.dataset.mtab === "visual";
+        this.querySelectorAll("#haMapperTabs .mapper-tab").forEach((x) => x.classList.toggle("active", x === tb));
+        const vp = this.querySelector("#haVisualMapperPane"), yp = this.querySelector("#haYamlMapperPane");
+        if (vp) vp.style.display = isVis ? "block" : "none";
+        if (yp) yp.style.display = isVis ? "none" : "block";
+      };
+    });
+
     this.querySelectorAll("#tapPills .pill").forEach((b) => {
       b.onclick = () => {
         this._tapMod = b.dataset.tap;
         this.querySelectorAll("#tapPills .pill").forEach((x) => x.classList.toggle("active", x === b));
         this._refreshStudioView();
+      };
+    });
+
+    this.querySelectorAll("[data-test-tap]").forEach((tb) => {
+      tb.onclick = (ev) => {
+        ev.stopPropagation();
+        const tapKind = tb.getAttribute("data-test-tap") || "single";
+        this._tapMod = tapKind;
+        this.querySelectorAll("#tapPills .pill").forEach((x) => x.classList.toggle("active", x.dataset.tap === tapKind));
+        const action = this._computedAction();
+        this._triggerVisualFeedback(this._selHex, action, this._selZone, "ui");
+        this._throttledSend(this._selHex, this._selZone, action);
+        this._updateYaml();
+      };
+    });
+
+    this.querySelectorAll("#haDomChips .dom-chip").forEach((ch) => {
+      ch.onclick = () => {
+        this._entityDomainFilter = ch.dataset.dom || "all";
+        this.querySelectorAll("#haDomChips .dom-chip").forEach((x) => x.classList.toggle("active", x === ch));
+        this._populateEntities();
+      };
+    });
+
+    this.querySelectorAll("#haActTiles .act-tile").forEach((at) => {
+      at.onclick = () => {
+        const svc = at.dataset.svc || "homeassistant.toggle";
+        const sel = this.querySelector("#mapService");
+        if (sel) sel.value = svc;
+        this.querySelectorAll("#haActTiles .act-tile").forEach((x) => x.classList.toggle("active", x === at));
+        this._updateYaml();
       };
     });
     ["#mapEntity", "#mapService", "#autoAlias"].forEach((s) => {
@@ -1296,6 +1695,11 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
           hex: this._selHex, zone: this._selZone, action, entity_id, service, label
         });
         this.querySelector("#status").textContent = `Saved & reloaded HA Automation: "${res.alias}"!`;
+        this._savedSessionBinds = (this._savedSessionBinds || []).concat([{ hex: this._selHex, zone: this._selZone, action, entity_id, service, alias: res.alias }]);
+        const sbBox = this.querySelector("#savedBindList");
+        if (sbBox) {
+          sbBox.innerHTML = this._savedSessionBinds.slice(-4).reverse().map((b) => `<div class="saved-bind-item"><span>✅ <b>${b.hex} Z${b.zone} · ${b.action}</b> &rarr; <code>${b.entity_id}</code> (${b.service.split('.')[1]})</span></div>`).join("");
+        }
       } catch (e) {
         this.querySelector("#status").textContent = `Save failed: ${e.message}`;
       }
@@ -1394,10 +1798,14 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
     if (!this._hass || !this._hass.states) return;
     const sel = this.querySelector("#mapEntity");
     if (!sel) return;
+    const domF = this._entityDomainFilter || "all";
+    const prevVal = sel.value;
     const ids = Object.keys(this._hass.states)
       .filter((id) => /^(light|fan|climate|cover|switch|scene|valve|input_boolean)\./.test(id))
+      .filter((id) => domF === "all" || id.startsWith(domF + "."))
       .sort();
     sel.innerHTML = ids.map((id) => `<option value="${id}">${(this._hass.states[id].attributes.friendly_name || id)} (${id})</option>`).join("");
+    if (prevVal && ids.includes(prevVal)) sel.value = prevVal;
     this._entitiesPopulated = true;
     this._updateYaml();
   }
@@ -1421,7 +1829,7 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
               <h3 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name || mod.name}</h3>
               <span class="pill-slot">${pillHtml}</span>
             </div>
-            <div class="meta"><b>${mod.id}</b> &middot; <code>${r.hex}</code> &middot; ${r.zones || mod.zones || 4} Zones ${r.linked_hex_id ? `<span style="color:#16a34a;font-weight:700;">🔗 ${r.linked_hex_id}</span>` : (this._remotes.some((c) => String(c.linked_hex_id || "").toUpperCase() === hx) ? `<span style="color:#0284c7;font-weight:700;">🔗 Custom Linked</span>` : "")}</div>
+            <div class="meta"><b>${mod.id}</b> &middot; <code>${r.hex}</code> &middot; ${r.zones || mod.zones || 4} Zones ${(() => { const rev = this._remotes.find((c) => String(c.linked_hex_id || "").toUpperCase() === hx); return r.linked_hex_id ? `<span style="color:#16a34a;font-weight:700;">🔗 Live ${r.linked_hex_id}</span>` : (rev ? `<span style="color:#0284c7;font-weight:700;">🔗 Overlay ${rev.hex}</span>` : ""); })()}</div>
             <div class="telem-foot">${tel ? tel.text : "Idle — press remote or drag faceplate"}</div>
           </div>
         </div>`;
@@ -1466,6 +1874,7 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
           const segIdx = mSeg ? Number(mSeg[1]) : 1;
           const finalAct = this._computedAction();
           this._triggerVisualFeedback(this._selHex, finalAct, this._selZone, "ui", segIdx);
+          this._mirrorVirtualAcrossPair(rem, finalAct, segIdx, this._selZone);
           this._throttledSend(this._selHex, this._selZone, finalAct, segIdx);
           this._updateYaml();
         };
@@ -1519,6 +1928,7 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
           if (zoneChanged) this._refreshStudioView();
           const finalAct = this._computedAction();
           this._triggerVisualFeedback(this._selHex, finalAct, this._selZone, "ui");
+          this._mirrorVirtualAcrossPair(rem, finalAct, undefined, this._selZone);
           this._throttledSend(this._selHex, this._selZone, finalAct);
           this._updateYaml();
         };
@@ -1529,6 +1939,163 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
       this._renderAnalogIndicators(fpBox, hx, this._selZone);
       this._renderHaLinkBar();
       this._renderCalBanner();
+
+      const pair = this._findLinkedPair(rem);
+      const modeTabs = this.querySelector("#haPairModeTabs");
+      const compWrap = this.querySelector("#companionWrap");
+      const compBox = this.querySelector("#companionBox");
+      const pTag = this.querySelector("#fpPrimaryTag");
+      if (compWrap) compWrap.style.display = "none";
+      if (compBox) { compBox.innerHTML = ""; compBox.dataset.hexUp = ""; }
+
+      const isCustRem = String(mod.id || "").startsWith("CUST_") || Boolean(rem.facia && rem.facia.enabled);
+      if ((isCustRem || pair) && modeTabs) {
+        const custTarget = pair ? pair.custom : rem;
+        const custMod = this._resolveModel(custTarget);
+        const baseId = custMod.baseModel || custMod.base || (pair ? this._resolveModel(pair.physical).id : mod.id);
+        const physMod = pair ? this._resolveModel(pair.physical) : (C.MODELS.find((m) => m.id === baseId && !m.isCustom) || mod);
+        const peelPct = Math.max(0, Math.min(100, Number(this._peelPct || 0)));
+        if (pTag) {
+          pTag.innerHTML = pair
+            ? `<span style="color:#16a34a">🟢 Paired Overlay <code>${pair.custom.hex}</code> ⇄ Bare <code>${pair.physical.hex}</code> (${physMod.id})</span>`
+            : `<span>🎨 Custom Stencil Overlay over Bare ${physMod.id}</span>`;
+        }
+        modeTabs.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:6px 10px;border-radius:9px;background:rgba(2,132,199,0.08);border:1px solid rgba(2,132,199,0.3);font-size:11.5px;">
+            <button type="button" id="haPeelBtn" class="${peelPct >= 50 ? '' : 'sec'}" style="padding:4px 10px;font-size:11.5px;">
+              ${peelPct >= 85 ? '🩹 Re-Apply Stencil' : (peelPct > 10 ? '🩹 Peel Fully (100%)' : '🩹 Peel Back Stencil')}
+            </button>
+            <input id="haPeelSlider" type="range" min="0" max="100" value="${peelPct}" style="width:110px;cursor:pointer;accent-color:#0284c7;" title="Peel back custom stencil to see original remote underneath" />
+            <span id="haPeelReadout" style="font-weight:700;min-width:110px;">${peelPct === 0 ? 'Stencil On (0%)' : (peelPct >= 98 ? `Bare ${physMod.id}` : `Peeled ${Math.round(peelPct)}%`)}</span>
+          </div>`;
+
+        // Stack bare physical SVG underneath custom stencil SVG inside faceplateBox for real-world diagonal corner peel!
+        if (String(rem.hex).toUpperCase() !== String(custTarget.hex).toUpperCase()) {
+          // User clicked physical card: still show its linked custom stencil with peel-back capability!
+          fpBox.innerHTML = C.renderModelSvg(custMod, { activeZone: this._selZone, uid: "mainfp", facia: custTarget.facia, touchZones: custTarget.touch_zones });
+          this._mountOverlays(fpBox, custTarget, this._selZone);
+        }
+        const overSvgHtml = fpBox.innerHTML;
+        const bareHtml = C.renderModelSvg(physMod, { activeZone: this._selZone, uid: "barefp", facia: null, touchZones: null });
+        fpBox.innerHTML = `
+          <div id="haPeelStack" style="position:relative;display:inline-grid;place-items:center;padding:4px;">
+            <div id="haBareLayer" style="grid-area:1/1;display:flex;justify-content:center;align-items:center;">${bareHtml}</div>
+            <div id="haStencilLayer" style="grid-area:1/1;position:relative;z-index:2;display:flex;justify-content:center;align-items:center;transition:clip-path .22s ease;filter:drop-shadow(-3px 5px 8px rgba(15,23,42,.26));">${overSvgHtml}</div>
+            <div id="haPeelFlap" style="position:absolute;inset:4px;z-index:3;pointer-events:none;background:linear-gradient(225deg,rgba(241,245,249,.96),rgba(148,163,184,.88));filter:drop-shadow(-5px 6px 9px rgba(15,23,42,.32));transition:clip-path .22s ease,opacity .2s ease;"></div>
+            <div id="haPeelCorner" title="Click corner to peel back stencil" style="position:absolute;top:2px;right:2px;width:38px;height:38px;z-index:4;cursor:pointer;border-radius:0 9px 0 24px;background:linear-gradient(225deg,rgba(148,163,184,.38) 0%,rgba(255,255,255,.9) 48%,rgba(15,23,42,.18) 52%,transparent 56%);"></div>
+          </div>`;
+
+        const bareBox = fpBox.querySelector("#haBareLayer");
+        const overBox = fpBox.querySelector("#haStencilLayer");
+        const flapEl  = fpBox.querySelector("#haPeelFlap");
+        const physHex = pair ? String(pair.physical.hex).toUpperCase() : hx;
+        this._renderAnalogIndicators(bareBox, physHex, this._selZone);
+        this._renderAnalogIndicators(overBox, String(custTarget.hex).toUpperCase(), this._selZone);
+
+        // Re-bind clicks on overBox & bareBox
+        const bindLayerClicks = (layerBox, targetRem) => {
+          if (!layerBox || !targetRem) return;
+          const tHx = String(targetRem.hex || "").toUpperCase();
+          layerBox.querySelectorAll(".mbx-seg-hit").forEach((segEl) => {
+            const segAct = segEl.getAttribute("data-seg-act") || "";
+            if (!segAct) return;
+            segEl.style.cursor = "pointer";
+            segEl.onclick = (ev) => {
+              ev.stopPropagation();
+              this._baseAct = segAct;
+              const mSeg = segAct.match(/_(\d+)$/);
+              const segIdx = mSeg ? Number(mSeg[1]) : 1;
+              const finalAct = this._computedAction();
+              this._triggerVisualFeedback(targetRem.hex, finalAct, this._selZone, "ui", segIdx);
+              this._mirrorVirtualAcrossPair(targetRem, finalAct, segIdx, this._selZone);
+              this._throttledSend(targetRem.hex, this._selZone, finalAct, segIdx);
+              this._updateYaml();
+            };
+          });
+          const sEl = layerBox.querySelector("svg");
+          const lTz = normTouchZones(targetRem === custTarget ? custTarget.touch_zones : null);
+          const lBit = this._selZone < 16 ? (1 << this._selZone) : 0x8000;
+          if (sEl && !(lTz.hue_ring.enabled && ((lTz.hue_ring.zone_mask ?? 0xFFFF) & lBit))) {
+            this._bindHueWheelInteractive(sEl);
+          }
+          layerBox.querySelectorAll(".mbx-hit").forEach((el) => {
+            const act = el.getAttribute("data-act") || "";
+            const zAttr = el.getAttribute("data-zone");
+            if (act === "hue") return;
+            if (ANALOG_ACTS.has(act) && sEl && targetRem !== custTarget) {
+              this._bindBarInteractive(sEl, el, act);
+              return;
+            }
+            el.onclick = (ev) => {
+              ev.stopPropagation();
+              if (zAttr !== null && zAttr !== "") {
+                this._selZone = Number(zAttr);
+                this._activeZones[tHx] = this._selZone;
+                if (act === "zone") { this._refreshStudioView(); return; }
+              }
+              this._baseAct = act === "zone_on" ? "on" : (act === "zone_off" ? "off" : act);
+              const finalAct = this._computedAction();
+              this._triggerVisualFeedback(targetRem.hex, finalAct, this._selZone, "ui");
+              this._mirrorVirtualAcrossPair(targetRem, finalAct, undefined, this._selZone);
+              this._throttledSend(targetRem.hex, this._selZone, finalAct);
+              this._updateYaml();
+            };
+          });
+        };
+        bindLayerClicks(overBox, custTarget);
+        bindLayerClicks(bareBox, pair ? pair.physical : rem);
+
+        const setHaPeel = (val, scrub) => {
+          this._peelPct = Math.max(0, Math.min(100, Number(val) || 0));
+          const p = this._peelPct;
+          const d = (p / 100) * 200;
+          let overClip = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", flapClip = "polygon(100% 0%,100% 0%,100% 0%)", fOp = 0;
+          if (p >= 99.5) {
+            overClip = "polygon(0% 100%, 0% 100%, 0% 100%)";
+          } else if (p > 0.5 && d <= 100) {
+            const xc = 100 - d, yc = d;
+            overClip = `polygon(0% 0%, ${xc.toFixed(1)}% 0%, 100% ${yc.toFixed(1)}%, 100% 100%, 0% 100%)`;
+            flapClip = `polygon(${xc.toFixed(1)}% 0%, 100% ${yc.toFixed(1)}%, ${Math.max(0, xc - d*0.28).toFixed(1)}% ${Math.min(100, yc + d*0.28).toFixed(1)}%)`;
+            fOp = 0.92;
+          } else if (p > 0.5) {
+            const r2 = 200 - d, xb = r2, yl = 100 - r2;
+            overClip = `polygon(0% ${yl.toFixed(1)}%, ${xb.toFixed(1)}% 100%, 0% 100%)`;
+            flapClip = `polygon(0% ${yl.toFixed(1)}%, ${xb.toFixed(1)}% 100%, ${(xb*0.55).toFixed(1)}% ${(yl+(100-yl)*0.45).toFixed(1)}%)`;
+            fOp = Math.max(0.18, r2 / 110);
+          }
+          if (overBox) {
+            overBox.style.transition = scrub ? "none" : "clip-path .22s ease";
+            overBox.style.clipPath = overClip;
+            overBox.style.pointerEvents = p >= 85 ? "none" : "auto";
+          }
+          if (flapEl) {
+            flapEl.style.transition = scrub ? "none" : "clip-path .22s ease, opacity .2s ease";
+            flapEl.style.clipPath = flapClip;
+            flapEl.style.opacity = String(fOp);
+          }
+          const rd = modeTabs.querySelector("#haPeelReadout");
+          if (rd) rd.textContent = p === 0 ? "Stencil On (0%)" : (p >= 98 ? `Bare ${physMod.id}` : `Peeled ${Math.round(p)}%`);
+          const pb = modeTabs.querySelector("#haPeelBtn");
+          if (pb) pb.textContent = p >= 85 ? "🩹 Re-Apply Stencil" : (p > 10 ? "🩹 Peel Fully (100%)" : "🩹 Peel Back Stencil");
+          const sl = modeTabs.querySelector("#haPeelSlider");
+          if (sl && Number(sl.value) !== Math.round(p)) sl.value = String(Math.round(p));
+        };
+        const stepPeel = () => {
+          const curP = Number(this._peelPct || 0);
+          setHaPeel(curP < 40 ? 52 : (curP < 92 ? 100 : 0), false);
+        };
+        const pb = modeTabs.querySelector("#haPeelBtn"); if (pb) pb.onclick = stepPeel;
+        const pc = fpBox.querySelector("#haPeelCorner"); if (pc) pc.onclick = stepPeel;
+        const sl = modeTabs.querySelector("#haPeelSlider");
+        if (sl) {
+          sl.oninput = (e) => setHaPeel(e.target.value, true);
+          sl.onchange = (e) => setHaPeel(e.target.value, false);
+        }
+        setHaPeel(peelPct, true);
+      } else {
+        if (modeTabs) modeTabs.innerHTML = "";
+        if (pTag) pTag.textContent = "";
+      }
     }
 
     const badge = this.querySelector("#selSummary");
@@ -1741,22 +2308,42 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
     };
   }
 
-  _downloadFile(filename, content, mime) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
+  async _downloadFile(filename, content, mime) {
+    if (window.MiLightRemoteStudio && window.MiLightRemoteStudio.downloadTextFile) {
+      await window.MiLightRemoteStudio.downloadTextFile(filename, content, mime);
+      return;
+    }
+    const b64 = btoa(unescape(encodeURIComponent(String(content || ""))));
     const a = document.createElement("a");
-    a.href = url;
+    a.href = `data:application/octet-stream;base64,${b64}`;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => a.remove(), 4000);
   }
 
   _updateYaml() {
     const hex = (this._selHex || "0x125C").toLowerCase();
     const zone = this._selZone;
     const action = this._computedAction();
+    const curRem = (this._remotes || []).find((r) => String(r.hex || "").toUpperCase() === String(this._selHex || "").toUpperCase()) || (this._remotes || [])[0];
+    const kcBox = this.querySelector("#visKeycapBox");
+    const vcTitle = this.querySelector("#visCtrlTitle");
+    const vcHint = this.querySelector("#visCtrlHint");
+    if (kcBox && vcTitle && window.MiBoxerCatalog) {
+      const pads = (curRem && curRem.facia && curRem.facia.pads) || {};
+      const padCfg = pads[this._baseAct] || pads[`btn_${this._baseAct}`] || pads[`zone_${zone}`] || {};
+      const icoObj = padCfg.icon && window.MiBoxerCatalog.FACIA_ICONS ? window.MiBoxerCatalog.FACIA_ICONS[padCfg.icon] : null;
+      const customLbl = (this._labelMapForHex(this._selHex)[this._baseAct]) || padCfg.label || this._baseAct.toUpperCase();
+      kcBox.innerHTML = (icoObj && icoObj.svg)
+        ? `<svg viewBox="0 0 24 24" width="24" height="24">${icoObj.svg}</svg><span style="font-size:9.5px;font-weight:800;margin-top:2px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${customLbl}</span>`
+        : `<span style="font-size:12px;font-weight:800;">${customLbl.slice(0, 6)}</span><span style="font-size:9.5px;opacity:0.75;">Z${zone}</span>`;
+      vcTitle.textContent = `${curRem ? (curRem.name || curRem.hex) : hex.toUpperCase()} · Zone ${zone === 0 ? 'All' : zone} · ${customLbl} (${action})`;
+      if (vcHint) {
+        const mf = padCfg.multifunc && padCfg.multifunc.enabled ? ` · Multi-Function Step 1→${padCfg.multifunc.steps} + Hold OFF active` : '';
+        vcHint.textContent = `Trigger event: event.milight_${hex}_zone_${zone} == "${action}"${mf}`;
+      }
+    }
     const entity = this.querySelector("#mapEntity")?.value || "light.example";
     const svc = this.querySelector("#mapService")?.value || "homeassistant.toggle";
     const alias = this.querySelector("#autoAlias")?.value.trim() || `Mi-Light ${hex.toUpperCase()} Z${zone} ${action} -> ${entity}`;
