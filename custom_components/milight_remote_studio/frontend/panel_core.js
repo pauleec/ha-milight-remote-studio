@@ -912,7 +912,8 @@ sliderDefs.forEach(({ key, sel }) => {
           fpPill.className = `src-pill ${isRf ? "rf" : "ui"}`;
           fpPill.textContent = isRf ? "🟢 Physical RF" : "🟠 Virtual UI";
         }
-        const badge = this.querySelector("#selSummary");
+        if (fpBox) { fpBox.querySelectorAll("svg").forEach((s) => { s.removeAttribute("width"); s.removeAttribute("height"); }); }
+    const badge = this.querySelector("#selSummary");
         if (badge) badge.textContent = `${this._selHex} · Zone ${this._selZone} · ${this._computedAction()}`;
       }
     }
@@ -1266,11 +1267,23 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         }
         .app-shell button.sec, .app-shell .pill { background: var(--secondary-background-color); color: var(--primary-text-color); }
         .app-shell .pill.active { background: #0284c7; color: #fff; border-color: #0284c7; }
+
+        .app-shell .mlrs-tour-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 9px 14px; border-radius: 11px; border: 1px solid rgba(2,132,199,0.38); background: linear-gradient(135deg, rgba(2,132,199,0.10), rgba(15,23,42,0.03)); margin-bottom: 8px; font-size: 12px; }
+        .app-shell .mlrs-tour-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 240px; }
+        .app-shell .mlrs-tour-icon { width: 32px; height: 32px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+        .app-shell .mlrs-tour-step-badge { display: inline-flex; padding: 2px 8px; border-radius: 999px; background: rgba(2,132,199,0.16); color: #0284c7; font-weight: 800; font-size: 10.5px; text-transform: uppercase; margin-right: 6px; }
+        .app-shell .mlrs-tour-dots { display: inline-flex; gap: 4px; align-items: center; margin-left: 8px; }
+        .app-shell .mlrs-tour-dot { width: 6px; height: 6px; border-radius: 999px; background: rgba(100,116,139,0.35); }
+        .app-shell .mlrs-tour-dot.on { width: 15px; background: #0284c7; }
+        .app-shell .mlrs-tour-nav { display: flex; gap: 6px; align-items: center; }
+        .app-shell button.mlrs-tour-btn { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-weight: 700; font-size: 11.5px; }
+        .app-shell button.mlrs-tour-btn.demo { background: #0284c7; border-color: #0284c7; color: #fff; }
+
         .status-line { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--secondary-text-color); margin-bottom: 8px; flex-shrink: 0; }
 
         /* 3-Frame Internal Workspace */
         .workspace {
-          display: grid; grid-template-columns: 265px minmax(380px, 470px) 1fr;
+          display: grid; grid-template-columns: 245px minmax(440px, 1.25fr) minmax(390px, 560px);
           gap: 14px; flex: 1; min-height: 0; overflow: hidden;
         }
         @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; overflow: visible; } }
@@ -1298,8 +1311,8 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         .src-pill.ui { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
 
         /* Center Frame: Peel-Back Faceplate Stage */
-        #faceplateBox { display: flex; justify-content: center; align-items: center; flex: 1; min-height: 360px; padding: 6px; user-select: none; overflow: hidden; }
-        #faceplateBox svg { width: auto; height: 100%; max-width: 340px; max-height: calc(100vh - 285px); min-height: 320px; filter: drop-shadow(0 10px 22px rgba(0,0,0,.24)); }
+        #faceplateBox { display: flex; justify-content: center; align-items: center; flex: 1; min-height: 390px; padding: 8px; user-select: none; overflow: hidden; }
+        #faceplateBox svg { width: auto !important; height: clamp(380px, calc(100vh - 275px), 650px) !important; max-width: 94% !important; max-height: 100% !important; filter: drop-shadow(0 12px 26px rgba(0,0,0,.24)); }
         .mbx-hit { cursor: pointer; }
         .mbx-selected:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > rect,
         .mbx-selected:not([data-act="hue"]):not([data-act="kelvin"]):not([data-act="color_temp"]):not([data-act="saturation"]):not([data-act="brightness"]) > circle,

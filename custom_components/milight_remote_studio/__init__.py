@@ -261,12 +261,15 @@ class MilightDownloadFetchView(HomeAssistantView):
         if not item:
             return web.Response(status=404, text="Download token expired")
         safe_fn = item["filename"]
+        raw_bytes = item["content"].encode("utf-8")
         return web.Response(
-            body=item["content"].encode("utf-8"),
+            body=raw_bytes,
             headers={
                 "Content-Type": "application/octet-stream",
+                "Content-Length": str(len(raw_bytes)),
                 "Content-Disposition": f'attachment; filename="{safe_fn}"',
                 "Cache-Control": "no-store",
+                "Connection": "close",
             },
         )
 
