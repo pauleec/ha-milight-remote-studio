@@ -332,7 +332,7 @@ return false;
     const target = rem || (this._remotes || []).find((x) => String(x.hex || "").toUpperCase() === String(this._selHex || "").toUpperCase()) || {};
     const mod = this._resolveModel(target);
     const hubUrl = this._getHubUrl();
-    window.MiLightRemoteStudio.openFaciaDesigner({
+    window.MiLightRemoteStudio.openFaciaDesigner({ initialWorkflow: (() => { const w = this._pendingStencilWorkflow || null; this._pendingStencilWorkflow = null; return w; })(),
       hubUrl,
       model: mod,
       hexId: target.hex || this._selHex,
@@ -1362,7 +1362,16 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         select, input[type="text"] { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); font-size: 12.5px; }
         .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #0284c7; color: #ffffff; font-weight: 800; font-size: 11px; }
         pre { background: var(--secondary-background-color); border: 1px solid var(--divider-color); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 11.5px; margin: 8px 0 0; }
-      </style>
+      
+      button, .btn, .pill-btn, [id*="Sync"], [id*="refreshBtn"], [id*="Stencil"] {
+        transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease !important;
+      }
+      button:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.07); }
+      button:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(0.95) !important; }
+      .mrs-sync-flash-ok { background: #059669 !important; border-color: #059669 !important; color: #ffffff !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.28) !important; }
+      .mrs-sync-flash-warn { background: #d97706 !important; border-color: #d97706 !important; color: #ffffff !important; }
+    
+    </style>
 
       <div class="app-shell">
         <div class="hdr">
@@ -1374,6 +1383,7 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
             <label style="display:inline-flex;align-items:center;gap:5px;margin:0;text-transform:none;font-size:12px;cursor:pointer;">
               <input id="liveSendChk" type="checkbox" checked /> Live Dispatch
             </label>
+            <button id="openRecommenderWizBtn" type="button" style="background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:700">🪄 Recommend Remote</button>
             <button id="openHubStencilStudioBtn" type="button" style="background:#0f172a;color:#fff;">🎨 Stencil Studio</button>
             <button id="refreshBtn" type="button">🔄 Sync Remotes</button>
             <a href="${hubUrl}/#/remotes" target="_blank" rel="noreferrer" style="text-decoration:none;"><button class="sec" type="button">Hub #/remotes ↗</button></a>
@@ -1382,7 +1392,8 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         </div>
 
         <!-- Dedicated Framed Guided Showcase Card -->
-        <div id="haGuidedTourBar" style="flex-shrink:0;"></div>
+        <div id="mrsWorkflowLauncherMount"></div>
+      <div id="haGuidedTourBar" style="flex-shrink:0;"></div>
         <div class="status-line"><span id="status">Loading registered remotes...</span></div>
 
         <!-- 3-Column Internal Resizing Workspace -->
@@ -1611,14 +1622,96 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
       }
     };
     this.querySelector("#liveSendChk").onchange = (e) => { this._liveSend = e.target.checked; };
-    this.querySelector("#refreshBtn").onclick = () => this._loadRemotes();
+    this.querySelector("#refreshBtn").onclick = async (ev) => {
+        const btn = ev && ev.currentTarget ? ev.currentTarget : (this.shadowRoot || this).querySelector('#refreshBtn');
+        const origHtml = btn ? btn.innerHTML : '🔄 Sync Remotes';
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.85'; btn.innerHTML = '⏳ Syncing Hub…'; }
+        try {
+          await (this._loadRemotes());
+          const cnt = Array.isArray(this._remotes) ? this._remotes.length : (this._remotes ? Object.keys(this._remotes).length : 0);
+          if (btn) {
+            btn.disabled = false; btn.style.opacity = '1';
+            btn.classList.add('mrs-sync-flash-ok');
+            btn.innerHTML = `✅ Synced (${cnt})!`;
+            setTimeout(() => { if (btn.isConnected) { btn.classList.remove('mrs-sync-flash-ok'); btn.innerHTML = origHtml; } }, 2400);
+          }
+        } catch (err) {
+          if (btn) {
+            btn.disabled = false; btn.style.opacity = '1';
+            btn.classList.add('mrs-sync-flash-warn');
+            btn.innerHTML = '⚠️ Hub Offline';
+            setTimeout(() => { if (btn.isConnected) { btn.classList.remove('mrs-sync-flash-warn'); btn.innerHTML = origHtml; } }, 3000);
+          }
+        }
+      };
     window.__MLRS_STAGE_DOWNLOAD = async (filename, content, mime) => {
       if (!this._hass) return null;
       const res = await this._hass.callApi("POST", "milight_remote_studio/download_stage", { filename, content, mime });
       return res && res.url ? res.url : null;
     };
 
-    const tourMount = this.querySelector("#haGuidedTourBar");
+    
+      const wfBox = (this.shadowRoot || this).querySelector('#mrsWorkflowLauncherMount');
+      if (wfBox && window.MiLightRemoteStudio && window.MiLightRemoteStudio.mountWorkflowLauncher) {
+        window.MiLightRemoteStudio.mountWorkflowLauncher(wfBox, {
+          launcherId: 'ha_main_studio',
+          onOpenRecommender: () => {
+            const hObj = this._hass || this.hass || {};
+            const statesMap = hObj.states || {};
+            const allowedDoms = new Set(['light', 'cover', 'fan', 'climate', 'media_player', 'switch', 'scene', 'script']);
+            const haDevs = Object.entries(statesMap)
+              .filter(([eid]) => allowedDoms.has(eid.split('.')[0]))
+              .map(([eid, st]) => ({
+                entity_id: eid,
+                domain: eid.split('.')[0],
+                name: (st && st.attributes && st.attributes.friendly_name) || eid,
+                dimmable: eid.startsWith('light.') ? Boolean(!st.attributes || !st.attributes.supported_color_modes || !st.attributes.supported_color_modes.every(m => m === 'onoff')) : true
+              }));
+            if (window.MiLightRemoteStudio && window.MiLightRemoteStudio.openDeviceRecommenderWizard) {
+              window.MiLightRemoteStudio.openDeviceRecommenderWizard({
+                devices: haDevs,
+                hexId: this._selectedHex || '',
+                hubUrl: this._hubUrl || '',
+                onSaveCustomModel: async (res) => {
+                  if (res && res.customModel && window.MiBoxerCatalog && window.MiBoxerCatalog.upsertCustomModel) {
+                    window.MiBoxerCatalog.upsertCustomModel(res.customModel);
+                  }
+                  if (typeof this._saveCustomModelToBackend === 'function') {
+                    try { await this._saveCustomModelToBackend(res); } catch (_) {}
+                  }
+                  if (typeof this._render === 'function') this._render();
+                }
+              });
+            }
+          },
+          onOpenStencil: (wfMode) => {
+            this._pendingStencilWorkflow = wfMode;
+            const sb = (this.shadowRoot || this).querySelector('#openHubStencilStudioBtn');
+            if (sb) sb.click();
+          },
+          onFocusMapper: () => {
+            const mapperCol = (this.shadowRoot || this).querySelector('.col-right, [data-tab="mapper"], #mapperPane') || (this.shadowRoot || this).querySelectorAll('.card, section')[2];
+            if (mapperCol) {
+              mapperCol.classList.add('mlrs-tour-focus');
+              mapperCol.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              setTimeout(() => mapperCol.classList.remove('mlrs-tour-focus'), 3600);
+            }
+          },
+          onStartShowcase: () => {
+            localStorage.setItem('mlrs_tour_ha_studio_hide', '0');
+            localStorage.setItem('mlrs_tour_ha_studio_idx', '0');
+            localStorage.setItem('mlrs_tour_main_studio_hide', '0');
+            if (typeof this._render === 'function') this._render();
+            else location.reload();
+          },
+          onSyncAndCalibrate: () => {
+            const sy = (this.shadowRoot || this).querySelector('#refreshBtn');
+            if (sy) sy.click();
+          }
+        });
+      }
+
+      const tourMount = this.querySelector("#haGuidedTourBar");
     if (tourMount && window.MiLightRemoteStudio && window.MiLightRemoteStudio.mountShowcaseTour) {
       window.MiLightRemoteStudio.mountShowcaseTour(tourMount, {
         tourId: "ha_studio_main",

@@ -42,3 +42,17 @@ Interactive 1:1 visual remote configurator, capacitive wall-panel stencil studio
 1. Open **HACS → Integrations → ⋮ (Top Right) → Custom repositories**.
 2. Add `https://github.com/pauleec/ha-milight-remote-studio` with category **Integration**.
 3. Install **Mi-Light Visual Remote & Panel Studio** and restart Home Assistant.
+
+## Nighttime Strontium Aluminate Luminous Remote Preview & 1:1 Cut Sheets
+
+![luminous-remote-1to1-cutsheet](docs/screenshots/luminous-remote-1to1-cutsheet.png)
+
+![luminous-remote-darkroom-glow](docs/screenshots/luminous-remote-darkroom-glow.png)
+
+![luminous-remote-darkroom-scrub](docs/screenshots/luminous-remote-darkroom-scrub.png)
+
+![luminous-remote-daytime-studio](docs/screenshots/luminous-remote-daytime-studio.png)
+
+![luminous-remote-extra](docs/screenshots/luminous-remote-extra.png)
+
+![luminous-remote-main-launcher](docs/screenshots/luminous-remote-main-launcher.png)

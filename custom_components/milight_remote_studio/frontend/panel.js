@@ -687,7 +687,7 @@
         <path d="M 64 4 C 99 4, 115 26, 116 134 C 115 242, 99 264, 64 264 C 29 264, 13 242, 12 134 C 13 26, 29 4, 64 4 Z" fill="${p.body}" stroke="${rimCol}" stroke-width="1.8"/>
         <path d="M 64 6 C 97 6, 113 28, 114 134 C 113 240, 97 262, 64 262 C 31 262, 15 240, 14 134 C 15 28, 31 6, 64 6 Z" fill="none" stroke="${p.bezel}" stroke-width="0.9"/>
         ${masterOn}${masterOff}
-        <!-- Color Ring + Center Cap with Indicator -->
+        <!-- Colour Ring + Center Cap with Indicator -->
         ${colorRing(64, 71, 29, 13)}
         <circle cx="64" cy="71" r="16" fill="${p.body}" stroke="${p.bezel}" stroke-width="0.7"/>
         <circle cx="64" cy="71" r="3.8" fill="none" stroke="${p.keyStr}" stroke-width="0.85"/>
@@ -1071,11 +1071,31 @@
 
 
 // === MIBOXER_FACIA_EXTENSION_START ===
-  const CAPACITIVE_LAYOUTS = new Set(['b8', 'b_strip', 'b0', 'b5', 'u_panel', 'm4']);
+  const CAPACITIVE_LAYOUTS = new Set([
+    'b8', 'b_strip', 'b0', 'b5', 'u_panel', 'm4',
+    'k_display', 's_puck', 'fut087',
+    'fut089', 'fut092', 'c_wheel', 'c_slot'
+  ]);
+
+  const SINGLE_STICK_ON_LAYOUTS = new Set([
+    'b8', 'b_strip', 'b0', 'b5', 'u_panel', 'm4',
+    's_puck', 'fut087'
+  ]);
+
+  function getStencilFitMode(modelOrId) {
+    const m = typeof modelOrId === 'string' ? (MODELS.find(x => x.id === modelOrId) || {}) : (modelOrId || {});
+    if (m.isCustom) return 'single_sheet';
+    return SINGLE_STICK_ON_LAYOUTS.has(m.layout) ? 'single_sheet' : 'cut_stickers';
+  }
+
+  function isSingleStickOnStencilReady(modelOrId) {
+    return getStencilFitMode(modelOrId) === 'single_sheet';
+  }
 
   function isCapacitiveFlatPanel(modelOrId) {
     const m = typeof modelOrId === 'string' ? (MODELS.find(x => x.id === modelOrId) || {}) : (modelOrId || {});
-    return (m.cat === 'panel' || m.isCustom) && CAPACITIVE_LAYOUTS.has(m.layout);
+    if (m.isCustom) return true;
+    return CAPACITIVE_LAYOUTS.has(m.layout);
   }
 
 
@@ -1118,13 +1138,18 @@
     if (layout === 'u_panel') return { width_mm: 70, height_mm: 114, glass_w_mm: 65, glass_h_mm: 109, corner_mm: 4.0, led_x_pct: 50, led_y_pct: 8.5, mount: 'US Single-Gang Glass Wall Panel', form_factor: 'US Single-Gang Glass Wall Panel' };
     if (layout === 'm4') return { width_mm: 142, height_mm: 86, glass_w_mm: 136, glass_h_mm: 80, corner_mm: 4.0, led_x_pct: 8.5, led_y_pct: 11, mount: 'Italian 503/504 Landscape Glass Panel', form_factor: 'Italian 503/504 Landscape Glass Panel' };
     if (layout === 'b_strip' || layout === 'b0' || layout === 'b5') return { width_mm: 86, height_mm: 86, glass_w_mm: 81, glass_h_mm: 81, corner_mm: 4.0, led_x_pct: 50, led_y_pct: 8.0, mount: '86x86mm Square Glass Wall Panel', form_factor: '86x86mm Square Glass Wall Panel' };
+    if (layout === 'k_display') return { width_mm: 72, height_mm: 72, glass_w_mm: 66, glass_h_mm: 66, corner_mm: 36.0, shape: 'round', led_x_pct: 50, led_y_pct: 27, mount: '72mm Round Rotary Display Puck', form_factor: '72mm Round Rotary Knob / Puck' };
+    if (layout === 's_puck') return { width_mm: 70, height_mm: 70, glass_w_mm: 64, glass_h_mm: 64, corner_mm: 35.0, shape: 'round', led_x_pct: 50, led_y_pct: 16, mount: '70mm Round Magnetic Touch Puck', form_factor: '70mm Round Capacitive Puck' };
+    if (layout === 'fut087') return { width_mm: 80, height_mm: 80, glass_w_mm: 62, glass_h_mm: 62, corner_mm: 40.0, shape: 'round', led_x_pct: 50, led_y_pct: 18, mount: '80mm Round Dimmer Puck', form_factor: '80mm Round Touch Dimmer' };
+    if (layout === 'fut089') return { width_mm: 47, height_mm: 153, glass_w_mm: 43, glass_h_mm: 148, corner_mm: 10.0, led_x_pct: 50, led_y_pct: 5.5, mount: 'Handheld 8-Zone Remote Overlay', form_factor: '47x153mm Handheld 8-Zone Remote' };
+    if (layout === 'fut092' || layout === 'c_wheel' || layout === 'c_slot') return { width_mm: 47, height_mm: 138, glass_w_mm: 43, glass_h_mm: 133, corner_mm: 10.0, led_x_pct: 50, led_y_pct: 6.0, mount: 'Handheld 4-Zone Remote Overlay', form_factor: '47x138mm Handheld Capacitive Remote' };
     return { width_mm: 86, height_mm: 86, glass_w_mm: 80, glass_h_mm: 80, corner_mm: 4.0, mount: 'Standard Panel', form_factor: 'Standard Remote / Wall Panel' };
   }
 
-  // Standardized 24x24 Architectural Vector Icons: Rooms (Group A) + Devices & Controls (Group B)
+  // Standardised 24x24 Architectural Vector Icons: Rooms (Group A) + Devices & Controls (Group B)
   const FACIA_ICONS = {
     none:       { group: 'basic',  name: 'No Icon (Text Only)', svg: '' },
-    // --- Standardized Room Icons (for Multi-Zone Remotes) ---
+    // --- Standardised Room Icons (for Multi-Zone Remotes) ---
     home_all:   { group: 'room',   name: 'Whole Home / All', svg: '<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>' },
     sofa:       { group: 'room',   name: 'Living / Lounge', svg: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3m-16 0h18v5H3v-5zm2 5v2.5m14-2.5v2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' },
     kitchen:    { group: 'room',   name: 'Kitchen', svg: '<rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><line x1="4" y1="10" x2="20" y2="10" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="7" r="1" fill="currentColor"/><circle cx="12" cy="7" r="1" fill="currentColor"/><line x1="9" y1="13" x2="15" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' },
@@ -1162,6 +1187,15 @@
     warm_cool:  { group: 'device', name: 'Warm / Cool CCT', svg: '<path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 0v16" fill="none" stroke="currentColor" stroke-width="1.9"/>' }
   };
 
+  const FACIA_FONTS = {
+    sans:      { name: 'Clean Sans (Inter)',        stack: 'Inter,system-ui,-apple-system,sans-serif', charFactor: 0.55 },
+    geometric: { name: 'Geometric (Century/Futura)', stack: '"Century Gothic",Futura,"Trebuchet MS",sans-serif', charFactor: 0.58 },
+    condensed: { name: 'Condensed (Space-Saving)',  stack: '"Arial Narrow","Roboto Condensed",Impact,sans-serif', charFactor: 0.44 },
+    rounded:   { name: 'Soft Rounded',              stack: '"SF Pro Rounded","Nunito","Segoe UI",sans-serif', charFactor: 0.56 },
+    mono:      { name: 'Technical Mono',            stack: 'ui-monospace,SFMono-Regular,Consolas,monospace', charFactor: 0.60 },
+    serif:     { name: 'Architectural Serif',       stack: 'Georgia,"Times New Roman",serif', charFactor: 0.54 }
+  };
+
   const FACIA_THEMES = {
     pure_white:      { name: 'Pure White Architectural',  bg: '#f1f5f9', glass: '#ffffff', bezel: '#cbd5e1', padFill: '#f8fafc', padStroke: '#cbd5e1', ink: '#0f172a', subInk: '#64748b', accent: '#0284c7', mono: false },
     matte_black:     { name: 'Matte Black Glass',         bg: '#0f1115', glass: '#171a21', bezel: '#2d3340', padFill: '#212631', padStroke: '#384152', ink: '#f8fafc', subInk: '#94a3b8', accent: '#38bdf8', mono: false },
@@ -1186,6 +1220,87 @@
 
   function escXml(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Individual cut-sticker sheet builder for knobs, LCDs, rockers, physical buttons & handhelds
+  function getCutStickerSheet(modelOrId) {
+    const m = typeof modelOrId === 'string' ? (MODELS.find(x => x.id === modelOrId) || MODELS[0]) : (modelOrId || MODELS[0]);
+    const dims = getPhysicalDims(m);
+    const bp = getPanelBlueprint(m);
+    const stickers = [];
+
+    if (Array.isArray(bp.slots) && bp.slots.length > 0) {
+      bp.slots.forEach((sl, idx) => {
+        const wMm = sl.w ? Math.max(8, Math.round((sl.w / (bp.vw || 190)) * (dims.width_mm || 72) * 10) / 10) : 12;
+        const hMm = sl.h ? Math.max(8, Math.round((sl.h / (bp.vh || 190)) * (dims.height_mm || 72) * 10) / 10) : wMm;
+        stickers.push({
+          key: sl.key || `stk_${idx + 1}`,
+          label: sl.label || `Key ${idx + 1}`,
+          shape: sl.type === 'circle' ? 'circle' : 'rect',
+          width_mm: wMm,
+          height_mm: hMm,
+          action: sl.act || 'button_press',
+          zone: sl.zone != null ? sl.zone : null
+        });
+      });
+    } else {
+      const zCount = Math.min(8, Math.max(1, Number(m.zones || 4)));
+      stickers.push({ key: 'stk_on', label: 'ON', shape: 'rect', width_mm: 14, height_mm: 10, action: 'on', zone: null });
+      stickers.push({ key: 'stk_off', label: 'OFF', shape: 'rect', width_mm: 14, height_mm: 10, action: 'off', zone: null });
+      for (let z = 1; z <= zCount; z++) {
+        stickers.push({ key: `stk_z${z}`, label: `Z${z}`, shape: 'rect', width_mm: 12, height_mm: 10, action: 'zone', zone: z });
+      }
+    }
+
+    return {
+      model_id: m.id,
+      model_name: m.name || m.id,
+      layout: m.layout || 'standard',
+      fit_mode: getStencilFitMode(m),
+      base_dims_mm: { width_mm: dims.width_mm, height_mm: dims.height_mm },
+      sticker_count: stickers.length,
+      stickers
+    };
+  }
+
+  function renderCutStickerSheetSvg(modelOrId, opts) {
+    const o = opts || {};
+    const sheet = getCutStickerSheet(modelOrId);
+    const cols = 4;
+    const cellW = 54;
+    const cellH = 44;
+    const padX = 14;
+    const padY = 34;
+    const rows = Math.max(1, Math.ceil(sheet.stickers.length / cols));
+    const vw = padX * 2 + cols * cellW;
+    const vh = padY + rows * cellH + 28;
+
+    let itemsSvg = '';
+    sheet.stickers.forEach((stk, i) => {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      const cx = padX + c * cellW + cellW / 2;
+      const cy = padY + r * cellH + cellH / 2 - 4;
+      const sw = Math.min(40, Math.max(18, stk.width_mm * 1.4));
+      const sh = Math.min(24, Math.max(14, stk.height_mm * 1.4));
+      if (stk.shape === 'circle') {
+        const rad = Math.min(sw, sh) / 2;
+        itemsSvg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rad.toFixed(1)}" fill="#ffffff" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="3,1.5"/>`;
+      } else {
+        itemsSvg += `<rect x="${(cx - sw / 2).toFixed(1)}" y="${(cy - sh / 2).toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="3,1.5"/>`;
+      }
+      itemsSvg += `<text x="${cx.toFixed(1)}" y="${(cy + 2.5).toFixed(1)}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="7.5" font-weight="700" fill="#0f172a">${escXml(stk.label)}</text>`;
+      itemsSvg += `<text x="${cx.toFixed(1)}" y="${(cy + sh / 2 + 9).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="5.5" fill="#475569">${stk.width_mm}x${stk.height_mm}mm</text>`;
+    });
+
+    const calY = vh - 20;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${o.width || vw * 2}" height="${o.height || vh * 2}">
+      <rect x="1" y="1" width="${vw - 2}" height="${vh - 2}" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="${padX}" y="17" font-family="Inter,system-ui,sans-serif" font-size="8.5" font-weight="800" fill="#0f172a">${escXml(sheet.model_name)} — Cut Stickers (${sheet.sticker_count})</text>
+      ${itemsSvg}
+      <rect x="${padX}" y="${calY}" width="12" height="12" fill="none" stroke="#0f172a" stroke-width="1"/>
+      <text x="${padX + 16}" y="${calY + 8.5}" font-family="monospace" font-size="6" fill="#334155">10x10mm Scale Check (Print 100%)</text>
+    </svg>`;
   }
 
   // Exact hardware stencil geometry for every capacitive flat panel layout!
@@ -1299,6 +1414,105 @@
       return { vw: 236, vh: 184, outer: { x: 6, y: 6, w: 224, h: 172, rx: 10 }, glass: { x: 11, y: 11, w: 214, h: 162, rx: 7 }, titleY: 25, slots };
     }
 
+    if (m.layout === 'k_display') {
+      const isK6 = m.kind === 'k6';
+      const slots = [];
+      if (isK6) {
+        slots.push({ key: 'hue_ring', type: 'ring', surf: 'hue_ring', act: 'hue', cx: 95, cy: 95, rIn: 65, rOut: 81, label: 'COLOR' });
+      }
+      // Inner buttons positioned cleanly inside rIn=65 and clear of center LED cutout (y=56..74)
+      slots.push(
+        { key: 'btn_on',  type: 'circle', act: 'on',          cx: 95,  cy: 103, r: 12.2, label: 'PWR', sublabel: 'Hold Off' },
+        { key: 'btn_bri', type: 'circle', act: 'brightness',  cx: 62,  cy: 56,  r: 11.0, label: 'BRI' },
+        { key: 'btn_cct', type: 'circle', act: 'kelvin',      cx: 128, cy: 56,  r: 11.0, label: 'CCT' },
+        { key: 'btn_pal', type: 'circle', act: 'set_white',   cx: 49,  cy: 95,  r: 11.0, label: isK6 ? 'RGB/W' : 'Z1' },
+        { key: 'btn_sat', type: 'circle', act: 'saturation',  cx: 141, cy: 95,  r: 11.0, label: isK6 ? 'SAT' : 'Z4' },
+        { key: 'btn_m',   type: 'circle', act: 'mode',        cx: 65,  cy: 133, r: 11.0, label: isK6 ? 'MODE' : 'Z2' },
+        { key: 'btn_dly', type: 'circle', act: 'night_mode',  cx: 125, cy: 133, r: 11.0, label: isK6 ? 'DELAY' : 'Z3' }
+      );
+      return {
+        vw: 190, vh: 190,
+        outer: { x: 10, y: 10, w: 170, h: 170, rx: 85 },
+        glass: { x: 14, y: 14, w: 162, h: 162, rx: 81 },
+        cutout: { x: 75, y: 57, w: 40, h: 18, rx: 4.5, text: '100%' },
+        titleY: 169,
+        slots
+      };
+    }
+
+    if (m.layout === 's_puck') {
+      const isRgb = m.kind === 's2';
+      const slots = [
+        isRgb
+          ? { key: 'hue_ring', type: 'ring', surf: 'hue_ring', act: 'hue', cx: 95, cy: 95, rIn: 54, rOut: 78, label: 'COLOR' }
+          : { key: 'cct_bar',  type: 'ring', surf: 'cct_bar',  act: 'kelvin', cx: 95, cy: 95, rIn: 54, rOut: 78, label: 'CCT' },
+        { key: 'btn_on',  type: 'circle', act: 'on',         cx: 95, cy: 74,  r: 15, label: 'ON' },
+        { key: 'btn_off', type: 'circle', act: 'off',        cx: 95, cy: 116, r: 15, label: 'OFF' },
+        { key: 'btn_sdn', type: 'circle', act: 'brightness', cx: 63, cy: 95,  r: 12, label: 'DIM-' },
+        { key: 'btn_sup', type: 'circle', act: 'mode',       cx: 127, cy: 95, r: 12, label: isRgb ? 'MODE' : 'DIM+' }
+      ];
+      return {
+        vw: 190, vh: 190,
+        outer: { x: 11, y: 11, w: 168, h: 168, rx: 84 },
+        glass: { x: 16, y: 16, w: 158, h: 158, rx: 79 },
+        titleY: 42,
+        slots
+      };
+    }
+
+    if (m.layout === 'fut087') {
+      const slots = [
+        { key: 'bri_bar', type: 'ring', surf: 'bri_bar', act: 'brightness', cx: 95, cy: 95, rIn: 48, rOut: 76, label: 'DIMMER' },
+        { key: 'btn_on',  type: 'circle', act: 'on', cx: 95, cy: 95, r: 28, label: 'ON / OFF', sublabel: 'Hold Night' }
+      ];
+      return {
+        vw: 190, vh: 190,
+        outer: { x: 11, y: 11, w: 168, h: 168, rx: 84 },
+        glass: { x: 17, y: 17, w: 156, h: 156, rx: 78 },
+        titleY: 36,
+        slots
+      };
+    }
+
+    if (m.layout === 'fut089') {
+      const slots = [
+        { key: 'btn_on',   type: 'rect', act: 'on',  x: 24, y: 24, w: 46, h: 20, rx: 10, label: 'ALL ON' },
+        { key: 'btn_off',  type: 'rect', act: 'off', x: 90, y: 24, w: 46, h: 20, rx: 10, label: 'ALL OFF' },
+        { key: 'hue_ring', type: 'ring', surf: 'hue_ring', act: 'hue', cx: 80, cy: 86, rIn: 19, rOut: 38, label: 'COLOR' },
+        { key: 'center_w', type: 'circle', act: 'set_white', cx: 80, cy: 86, r: 13, label: 'W' },
+        { key: 'bri_bar',  type: 'hbar', surf: 'bri_bar', act: 'brightness', x: 24, y: 132, w: 112, h: 15, label: 'BRIGHTNESS' },
+        { key: 'cct_bar',  type: 'hbar', surf: 'cct_bar', act: 'kelvin',     x: 24, y: 153, w: 112, h: 15, label: 'WARM / COOL' },
+        { key: 'btn_sdn',  type: 'rect', act: 'mode_speed_down', x: 24, y: 175, w: 34, h: 18, rx: 4, label: 'S-' },
+        { key: 'btn_m',    type: 'rect', act: 'mode',            x: 63, y: 175, w: 34, h: 18, rx: 4, label: 'M' },
+        { key: 'btn_sup',  type: 'rect', act: 'mode_speed_up',   x: 102, y: 175, w: 34, h: 18, rx: 4, label: 'S+' }
+      ];
+      for (let z = 1; z <= 8; z++) {
+        const row = z <= 4 ? 0 : 1;
+        const colIdx = (z - 1) % 4;
+        slots.push({ key: `zone_${z}`, type: 'rocker', act: 'zone', zone: z, x: 24 + colIdx * 29, y: 200 + row * 44, w: 25, h: 38, rx: 5, label: `${z}` });
+      }
+      return { vw: 160, vh: 300, outer: { x: 10, y: 6, w: 140, h: 288, rx: 22 }, glass: { x: 14, y: 10, w: 132, h: 280, rx: 19 }, titleY: 19, slots };
+    }
+
+    if (m.layout === 'fut092' || m.layout === 'c_wheel' || m.layout === 'c_slot') {
+      const slots = [
+        { key: 'btn_on',   type: 'rect', act: 'on',  x: 24, y: 26, w: 46, h: 20, rx: 10, label: 'ALL ON' },
+        { key: 'btn_off',  type: 'rect', act: 'off', x: 90, y: 26, w: 46, h: 20, rx: 10, label: 'ALL OFF' },
+        m.layout === 'c_slot'
+          ? { key: 'hue_ring', type: 'hbar', surf: 'hue_ring', act: 'hue', x: 24, y: 64, w: 112, h: 22, label: 'COLOR' }
+          : { key: 'hue_ring', type: 'ring', surf: 'hue_ring', act: 'hue', cx: 80, cy: 88, rIn: 19, rOut: 38, label: 'COLOR' },
+        { key: 'bri_bar',  type: 'hbar', surf: 'bri_bar', act: 'brightness', x: 24, y: 136, w: 112, h: 16, label: 'BRIGHTNESS' },
+        { key: 'cct_bar',  type: 'hbar', surf: 'cct_bar', act: 'kelvin',     x: 24, y: 158, w: 112, h: 16, label: 'CCT / SAT' },
+        { key: 'btn_w',    type: 'rect', act: 'set_white',       x: 24, y: 182, w: 34, h: 19, rx: 4, label: 'W' },
+        { key: 'btn_m',    type: 'rect', act: 'mode',            x: 63, y: 182, w: 34, h: 19, rx: 4, label: 'M' },
+        { key: 'btn_sup',  type: 'rect', act: 'mode_speed_up',   x: 102, y: 182, w: 34, h: 19, rx: 4, label: 'S+' }
+      ];
+      for (let z = 1; z <= (m.zones || 4); z++) {
+        slots.push({ key: `zone_${z}`, type: 'rocker', act: 'zone', zone: z, x: 24 + (z - 1) * 29, y: 210, w: 25, h: 52, rx: 5, label: `${z}` });
+      }
+      return { vw: 160, vh: 280, outer: { x: 10, y: 6, w: 140, h: 268, rx: 22 }, glass: { x: 14, y: 10, w: 132, h: 260, rx: 19 }, titleY: 19, slots };
+    }
+
     // B5 4-bar panel
     const slots = [];
     for (let z = 1; z <= 4; z++) {
@@ -1350,20 +1564,158 @@
     } else if (facia.bgPattern === 'brushed') {
       defs += `<pattern id="pat_${u}" width="8" height="3" patternUnits="userSpaceOnUse"><line x1="0" y1="1" x2="8" y2="1" stroke="${col.padStroke}" stroke-width="0.35" opacity="0.3"/></pattern>`;
     }
+    const lumCfg = facia.luminous || {};
+    const darkPreview = Boolean(o.luminousPreview && !o.stencilMode);
+    const LUM_INK = '#6ee7b7';      // Strontium aluminate yellow-green/aqua emission
+    const LUM_CORE = '#ecfdf5';     // Bright phosphor core
+    const DIM_NIGHT_INK = '#334155'; // Unlit ink in dark room
+    const anyLum = Boolean(darkPreview || lumCfg.enabled || lumCfg.border || lumCfg.header || lumCfg.slots || Object.values(pads).some(p => p && p.luminous));
+    if (anyLum) {
+      defs += `<filter id="glow_${u}" x="-45%" y="-45%" width="190%" height="190%">
+        <feGaussianBlur stdDeviation="${darkPreview ? '3.4' : '1.9'}" result="blur1"/>
+        <feGaussianBlur stdDeviation="${darkPreview ? '1.3' : '0.7'}" result="blur2"/>
+        <feMerge><feMergeNode in="blur1"/><feMergeNode in="blur2"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>`;
+    }
     defs += `</defs>`;
 
+    const isSlotLum = (cfg) => Boolean((lumCfg.enabled && lumCfg.slots) || (cfg && cfg.luminous));
+    const isBdrLum = Boolean(lumCfg.enabled && lumCfg.border);
+    const isHdrLum = Boolean(lumCfg.enabled && lumCfg.header);
+
+    const bgCol = darkPreview ? '#070b14' : (facia.bgColor || col.bg);
+    const glassCol = darkPreview ? '#0b1220' : (facia.bgColor || col.glass);
+    const bdrCol = darkPreview ? (isBdrLum ? LUM_INK : '#1e293b') : (facia.boundaryColor || col.padStroke || col.bezel);
+    const borderGlow = isBdrLum ? ` filter="url(#glow_${u})"` : '';
+
+    // Helper: draw configurable slider track (pitch + end arrows: 'chevron' | 'triangle' | 'ticks' | 'dots' | 'none')
+    function renderSliderTrackMarkup(optsTrk) {
+      const pitch = Number(optsTrk.pitch ?? 2.2);
+      const arrowStyle = optsTrk.arrows || 'chevron';
+      const strokeCol = optsTrk.color || col.ink;
+      const dashAttr = pitch <= 0.1 ? '' : ` stroke-dasharray="${(pitch * 0.95).toFixed(2)},${(pitch * 0.85).toFixed(2)}" stroke-linecap="round"`;
+      const sw = 1.2;
+      let mOut = '';
+
+      // Emit an arrowhead or cap at (px, py) pointing in unit direction (ux, uy)
+      const emitCap = (px, py, ux, uy, isMaxEnd) => {
+        const nx = -uy, ny = ux; // perpendicular normal
+        if (arrowStyle === 'none') return '';
+        if (arrowStyle === 'ticks') {
+          const hw = 2.1;
+          return `<line x1="${(px + nx * hw).toFixed(2)}" y1="${(py + ny * hw).toFixed(2)}" x2="${(px - nx * hw).toFixed(2)}" y2="${(py - ny * hw).toFixed(2)}" stroke="${strokeCol}" stroke-width="1.35" stroke-linecap="round" pointer-events="none"/>`;
+        }
+        if (arrowStyle === 'dots') {
+          const rDot = isMaxEnd ? 1.65 : 1.05;
+          return `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="${rDot.toFixed(2)}" fill="${strokeCol}" pointer-events="none"/>`;
+        }
+        const tipX = px + ux * 0.9, tipY = py + uy * 0.9;
+        const bx = tipX - ux * 2.7, by = tipY - uy * 2.7;
+        const hw = 1.75;
+        if (arrowStyle === 'triangle') {
+          return `<polygon points="${tipX.toFixed(2)},${tipY.toFixed(2)} ${(bx + nx * hw).toFixed(2)},${(by + ny * hw).toFixed(2)} ${(bx - nx * hw).toFixed(2)},${(by - ny * hw).toFixed(2)}" fill="${strokeCol}" pointer-events="none"/>`;
+        }
+        // Default: 'chevron'
+        return `<polyline points="${(bx + nx * hw).toFixed(2)},${(by + ny * hw).toFixed(2)} ${tipX.toFixed(2)},${tipY.toFixed(2)} ${(bx - nx * hw).toFixed(2)},${(by - ny * hw).toFixed(2)}" fill="none" stroke="${strokeCol}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>`;
+      };
+
+      const sMin = Number(optsTrk.sMin ?? 0), sMax = Number(optsTrk.sMax ?? 100);
+      const startIsMax = sMin > sMax;
+
+      if (optsTrk.kind === 'arc') {
+        const { cx, cy, r, sDeg, eDeg } = optsTrk;
+        const insetDeg = arrowStyle === 'none' ? 3.2 : 5.4;
+        const a1 = sDeg + insetDeg, a2 = eDeg - insetDeg;
+        if (a2 > a1 + 2) {
+          const p1 = polarPt(cx, cy, r, a1);
+          const p2 = polarPt(cx, cy, r, a2);
+          const lg = Math.abs(a2 - a1) > 180 ? '1' : '0';
+          mOut += `<path d="M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${lg} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}" fill="none" stroke="${strokeCol}" stroke-width="${sw}"${dashAttr} opacity="0.88" pointer-events="none"/>`;
+          // Tangent at angle deg (0=12 o'clock CW): CW unit tangent = (cos(rad), sin(rad)); CCW outward at a1 = (-cos(rad1), -sin(rad1))
+          const rad1 = (a1 * Math.PI) / 180, rad2 = (a2 * Math.PI) / 180;
+          mOut += emitCap(p1.x, p1.y, -Math.cos(rad1), -Math.sin(rad1), startIsMax);
+          mOut += emitCap(p2.x, p2.y,  Math.cos(rad2),  Math.sin(rad2), !startIsMax);
+        }
+      } else {
+        const { x1, y1, x2, y2 } = optsTrk;
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len > 5) {
+          const ux = dx / len, uy = dy / len;
+          const inset = arrowStyle === 'none' ? 0.5 : 2.2;
+          const sx = x1 + ux * inset, sy = y1 + uy * inset;
+          const ex = x2 - ux * inset, ey = y2 - uy * inset;
+          mOut += `<line x1="${sx.toFixed(2)}" y1="${sy.toFixed(2)}" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="${strokeCol}" stroke-width="${sw}"${dashAttr} opacity="0.88" pointer-events="none"/>`;
+          mOut += emitCap(sx, sy, -ux, -uy, startIsMax);
+          mOut += emitCap(ex, ey,  ux,  uy, !startIsMax);
+        }
+      }
+      return mOut;
+    }
+
+    function hexToRgba(hexStr, alphaVal) {
+      const a = Math.max(0, Math.min(1, Number(alphaVal)));
+      const mHex = String(hexStr || '').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (!mHex) return hexStr || `rgba(255,255,255,${a.toFixed(2)})`;
+      let h = mHex[1];
+      if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${a.toFixed(2)})`;
+    }
+    const bgImg = (facia.bgImage && facia.bgImage.dataUrl) ? facia.bgImage : null;
+    let bgImgMarkup = '';
+    if (bgImg) {
+      const clipId = `bgclip_${u}`;
+      const zScale = Math.max(0.3, Math.min(3.0, Number(bgImg.scale ?? 100) / 100));
+      const panX = Number(bgImg.x ?? 0), panY = Number(bgImg.y ?? 0);
+      const fitMode = bgImg.fit || 'cover';
+      const par = fitMode === 'contain' ? 'xMidYMid meet' : (fitMode === 'stretch' ? 'none' : 'xMidYMid slice');
+      const iw = bp.glass.w * zScale, ih = bp.glass.h * zScale;
+      const ix = bp.glass.x + (bp.glass.w - iw) / 2 + (panX / 100) * bp.glass.w;
+      const iy = bp.glass.y + (bp.glass.h - ih) / 2 + (panY / 100) * bp.glass.h;
+      const rawOp = Math.max(0.05, Math.min(1, Number(bgImg.opacity ?? 88) / 100));
+      const effOp = darkPreview ? (rawOp * 0.18) : rawOp;
+      bgImgMarkup = `<defs><clipPath id="${clipId}"><rect x="${bp.glass.x}" y="${bp.glass.y}" width="${bp.glass.w}" height="${bp.glass.h}" rx="${bp.glass.rx}"/></clipPath></defs>` +
+        `<g clip-path="url(#${clipId})" pointer-events="none"><image href="${escXml(bgImg.dataUrl)}" x="${ix.toFixed(2)}" y="${iy.toFixed(2)}" width="${iw.toFixed(2)}" height="${ih.toFixed(2)}" preserveAspectRatio="${par}" opacity="${effOp.toFixed(2)}"/></g>`;
+    }
+
     let body = `${defs}
-      <rect x="${bp.outer.x}" y="${bp.outer.y}" width="${bp.outer.w}" height="${bp.outer.h}" rx="${bp.outer.rx}" fill="${col.bg}" stroke="${col.bezel}" stroke-width="2"/>
-      <rect x="${bp.glass.x}" y="${bp.glass.y}" width="${bp.glass.w}" height="${bp.glass.h}" rx="${bp.glass.rx}" fill="${col.glass}" stroke="${col.bezel}" stroke-width="0.8"/>`;
+      <rect x="${bp.outer.x}" y="${bp.outer.y}" width="${bp.outer.w}" height="${bp.outer.h}" rx="${bp.outer.rx}" fill="${bgCol}" stroke="${bdrCol}" stroke-width="2"${borderGlow}/>
+      <rect x="${bp.glass.x}" y="${bp.glass.y}" width="${bp.glass.w}" height="${bp.glass.h}" rx="${bp.glass.rx}" fill="${glassCol}" stroke="${bdrCol}" stroke-width="0.8"${borderGlow}/>${bgImgMarkup}`;
 
     if (facia.bgPattern === 'grid' || facia.bgPattern === 'brushed') {
       body += `<rect x="${bp.glass.x}" y="${bp.glass.y}" width="${bp.glass.w}" height="${bp.glass.h}" rx="${bp.glass.rx}" fill="url(#pat_${u})" pointer-events="none"/>`;
     }
 
+    const panelFontObj = FACIA_FONTS[facia.fontFamily || 'sans'] || FACIA_FONTS.sans;
+    const panelFontStack = panelFontObj.stack;
+    const panelFontScale = Math.max(0.6, Math.min(1.6, Number(facia.fontScale || 100) / 100));
+    const headerGlow = isHdrLum ? ` filter="url(#glow_${u})"` : '';
+    const hdrInk = darkPreview ? (isHdrLum ? LUM_INK : DIM_NIGHT_INK) : col.subInk;
+
     if (facia.panelTitle) {
-      body += `<text x="${(bp.vw / 2).toFixed(1)}" y="${bp.titleY}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="7.2" font-weight="800" letter-spacing="0.7" fill="${col.subInk}" pointer-events="none">${escXml(facia.panelTitle.toUpperCase())}</text>`;
+      const titleTxt = String(facia.panelTitle).trim().toUpperCase();
+      if (bp.outer && bp.outer.rx >= bp.outer.w * 0.45 && bp.outer.w === bp.outer.h) {
+        const tcx = bp.outer.x + bp.outer.w / 2;
+        const tcy = bp.outer.y + bp.outer.h / 2;
+        const tr = bp.outer.w / 2 + 5.5;
+        const tArcId = `ptArc_${u}`;
+        const pA = polarPt(tcx, tcy, tr, 225);
+        const pB = polarPt(tcx, tcy, tr, 135);
+        body += `<defs><path id="${tArcId}" d="M ${pA.x.toFixed(2)} ${pA.y.toFixed(2)} A ${tr.toFixed(2)} ${tr.toFixed(2)} 0 0 0 ${pB.x.toFixed(2)} ${pB.y.toFixed(2)}"/></defs>`;
+        body += `<text font-family="${escXml(panelFontStack)}" font-size="${(6.4 * panelFontScale).toFixed(2)}" font-weight="800" letter-spacing="0.9" fill="${hdrInk}"${headerGlow} pointer-events="none"><textPath href="#${tArcId}" startOffset="50%" text-anchor="middle">${escXml(titleTxt)}</textPath></text>`;
+      } else {
+        body += `<text x="${(bp.vw / 2).toFixed(1)}" y="${bp.titleY}" text-anchor="middle" font-family="${escXml(panelFontStack)}" font-size="${(7.2 * panelFontScale).toFixed(2)}" font-weight="800" letter-spacing="0.7" fill="${hdrInk}"${headerGlow} pointer-events="none">${escXml(titleTxt)}</text>`;
+      }
     } else if (facia.hideLogo === false) {
       body += `<text x="${bp.glass.x + 12}" y="${bp.titleY}" font-family="Inter,system-ui,sans-serif" font-size="8" font-weight="800" fill="${col.subInk}" pointer-events="none">MiBOXER®</text>`;
+    }
+
+    if (bp.cutout) {
+      body += `<rect x="${bp.cutout.x}" y="${bp.cutout.y}" width="${bp.cutout.w}" height="${bp.cutout.h}" rx="${bp.cutout.rx}" fill="${o.stencilMode ? '#ffffff' : '#090b10'}" stroke="${col.padStroke}" stroke-width="0.9" stroke-dasharray="${o.stencilMode ? '2,1.5' : 'none'}" pointer-events="none"/>`;
+      if (!o.stencilMode && bp.cutout.text) {
+        body += `<text x="${(bp.cutout.x + bp.cutout.w / 2).toFixed(1)}" y="${(bp.cutout.y + bp.cutout.h * 0.74).toFixed(1)}" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="11" font-weight="800" pointer-events="none">${escXml(bp.cutout.text)}</text>`;
+      }
     }
 
     if (facia.showLedPinhole) {
@@ -1373,73 +1725,168 @@
       body += `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="1.5" fill="${o.stencilMode ? '#ffffff' : col.bg}" stroke="${col.padStroke}" stroke-width="0.6" pointer-events="none"/>`;
     }
 
-    // Automatic box-aware autofit: sizes icon & text to fit safely inside pad width & height without overflow
-    function fitText(str, maxW, desiredFs, minFs) {
+    // Automatic box-aware autofit with per-pad font family, font scale, and top/bottom icon positioning
+    function resolvePadFont(cfg) {
+      const fKey = (cfg && cfg.fontFamily) || facia.fontFamily || 'sans';
+      const fObj = FACIA_FONTS[fKey] || FACIA_FONTS.sans;
+      const scPct = (cfg && cfg.fontScale) ? Number(cfg.fontScale) : Number(facia.fontScale || 100);
+      const fScale = Math.max(0.6, Math.min(1.6, (scPct || 100) / 100));
+      return { stack: fObj.stack, charFactor: fObj.charFactor || 0.55, scale: fScale };
+    }
+
+    function fitText(str, maxW, desiredFs, minFs, charFactor) {
       const s = String(str || '').trim();
       if (!s) return { text: '', fs: minFs };
-      const usableW = Math.max(8, maxW - 3.5);
-      const charFactor = 0.56;
-      const byWidth = usableW / Math.max(1, s.length * charFactor);
+      const usableW = Math.max(7, maxW - 3.0);
+      const cf = charFactor || 0.55;
+      const byWidth = usableW / Math.max(1, s.length * cf);
       const fs = Math.max(minFs, Math.min(desiredFs, byWidth));
-      const maxChars = Math.max(1, Math.floor(usableW / Math.max(0.1, fs * charFactor)));
+      const maxChars = Math.max(1, Math.floor(usableW / Math.max(0.1, fs * cf)));
       const clipped = s.length > maxChars ? (maxChars > 2 ? s.slice(0, maxChars - 1) + '…' : s.slice(0, maxChars)) : s;
       return { text: clipped, fs };
     }
 
     function drawGlyphContent(cx, cy, bw, bh, cfg, fallbackLbl, fallbackSub) {
-      const icoKey = (cfg && cfg.icon) || 'none';
+      // Default wide pads (bw >= bh * 1.32) to 'left' if iconPos not explicitly set, else 'top'
+      const rawPos = (cfg && cfg.iconPos) || '';
+      const iconPos = rawPos || ((bw >= bh * 1.45 && cfg && cfg.segmentMode === 'slider') ? 'left' : 'top');
+      const icoKey = iconPos === 'none' ? 'none' : ((cfg && cfg.icon) || 'none');
       const ico = FACIA_ICONS[icoKey];
       const hasIco = Boolean(ico && ico.svg);
+
+      const endKey = iconPos === 'both' ? ((cfg && cfg.iconEnd) || icoKey) : 'none';
+      const icoEnd = FACIA_ICONS[endKey];
+      const hasEndIco = Boolean(iconPos === 'both' && icoEnd && icoEnd.svg);
+
       const rawLbl = (cfg && cfg.label !== undefined) ? String(cfg.label) : (fallbackLbl || '');
       let rawSub = (cfg && cfg.sublabel !== undefined) ? String(cfg.sublabel) : (fallbackSub || '');
-      if (!rawSub && cfg && cfg.multifunc && cfg.multifunc.enabled) {
-        rawSub = `1-${cfg.multifunc.steps || 4} • Hold`;
+      if (!rawSub && cfg) {
+        if (cfg.segmentMode === 'slider') {
+          rawSub = `${Number(cfg.sliderMin ?? 0)}–${Number(cfg.sliderMax ?? 100)}%`;
+        } else if (cfg.multifunc && cfg.multifunc.enabled) {
+          rawSub = `1-${cfg.multifunc.steps || 4} • Hold`;
+        }
       }
-      const ink = (cfg && cfg.color) || col.ink;
+      const slotLum = isSlotLum(cfg);
+      const ink = darkPreview ? (slotLum ? LUM_CORE : DIM_NIGHT_INK) : ((cfg && cfg.color) || col.ink);
+      const effSubInk = darkPreview ? (slotLum ? LUM_INK : DIM_NIGHT_INK) : col.subInk;
+      const glowGrp = (darkPreview && slotLum) ? ` filter="url(#glow_${u})"` : '';
+      const pf = resolvePadFont(cfg);
 
-      const padW = Math.max(8, bw - 3);
-      const padH = Math.max(8, bh - 3);
-      const minD = Math.min(padW, padH);
-
-      const lblFit = rawLbl ? fitText(rawLbl, padW, Math.min(7.4, minD * (hasIco ? 0.24 : 0.36)), 3.6) : { text: '', fs: 0 };
-      const subFit = rawSub ? fitText(rawSub, padW, Math.min(4.8, (lblFit.fs || minD * 0.22) * 0.72), 3.0) : { text: '', fs: 0 };
-
-      const textBlockH = (lblFit.text ? lblFit.fs * 1.15 : 0) + (subFit.text ? subFit.fs * 1.2 : 0);
-      const availForIco = hasIco ? (lblFit.text || subFit.text ? Math.max(5.5, padH - textBlockH - 2.2) : Math.min(padW * 0.68, padH * 0.68)) : 0;
-      const icoSz = hasIco ? Math.max(5.2, Math.min(14.5, availForIco)) : 0;
-
-      const totalH = icoSz + (hasIco && textBlockH > 0 ? 1.8 : 0) + textBlockH;
-      let yCursor = cy - totalH / 2;
+      const padW = Math.max(8, bw - 2.6);
+      const padH = Math.max(8, bh - 2.6);
       let out = '';
 
-      if (hasIco) {
+      // HORIZONTAL LAYOUT ('left', 'right', 'both'): Icon(s) sit beside centered Main + Sub text!
+      if ((iconPos === 'left' || iconPos === 'right' || iconPos === 'both') && (hasIco || hasEndIco)) {
+        const icoSz = Math.max(4.6, Math.min(11.5, padH * 0.58, padW * (iconPos === 'both' ? 0.22 : 0.28)));
+        const sideGap = 1.8;
+        const reservedW = (hasIco ? icoSz + sideGap : 0) + (hasEndIco ? icoSz + sideGap : 0);
+        const textAvailW = Math.max(7, padW - reservedW);
+        const textCx = iconPos === 'left'
+          ? (cx + (hasIco ? (icoSz + sideGap) * 0.46 : 0))
+          : iconPos === 'right'
+            ? (cx - (hasIco ? (icoSz + sideGap) * 0.46 : 0))
+            : cx;
+
+        const baseLblFs = Math.min(7.4, padH * 0.36) * pf.scale;
+        const lblFit = rawLbl ? fitText(rawLbl, textAvailW + 2.2, baseLblFs, 3.0, pf.charFactor) : { text: '', fs: 0 };
+        const wantSub = Boolean(rawSub && padH >= 11.0);
+        const baseSubFs = Math.min(4.8, (lblFit.fs || padH * 0.25) * 0.74);
+        const subFit = wantSub ? fitText(rawSub, textAvailW + 2.4, baseSubFs, 2.7, pf.charFactor) : { text: '', fs: 0 };
+
+        const tH = (lblFit.text ? lblFit.fs * 1.10 : 0) + (subFit.text ? subFit.fs * 1.12 : 0);
+        let ty = cy - tH / 2;
+        if (lblFit.text) {
+          out += `<text x="${textCx.toFixed(2)}" y="${(ty + lblFit.fs * 0.82).toFixed(2)}" text-anchor="middle" font-family="${escXml(pf.stack)}" font-size="${lblFit.fs.toFixed(2)}" font-weight="700" fill="${ink}" pointer-events="none">${escXml(lblFit.text)}</text>`;
+          ty += lblFit.fs * 1.10;
+        }
+        if (subFit.text) {
+          out += `<text x="${textCx.toFixed(2)}" y="${(ty + subFit.fs * 0.82).toFixed(2)}" text-anchor="middle" font-family="${escXml(pf.stack)}" font-size="${subFit.fs.toFixed(2)}" font-weight="600" fill="${effSubInk}" pointer-events="none">${escXml(subFit.text)}</text>`;
+        }
+
+        const iy = cy - icoSz / 2;
+        if (hasIco && (iconPos === 'left' || iconPos === 'both')) {
+          const ix = iconPos === 'both' ? (cx - padW / 2 + 1.2) : Math.max(cx - padW / 2 + 1.0, textCx - textAvailW / 2 - icoSz - 0.6);
+          out += `<g transform="translate(${ix.toFixed(2)},${iy.toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+        } else if (hasIco && iconPos === 'right') {
+          const ix = Math.min(cx + padW / 2 - icoSz - 1.0, textCx + textAvailW / 2 + 0.6);
+          out += `<g transform="translate(${ix.toFixed(2)},${iy.toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+        }
+        if (hasEndIco) {
+          const ixEnd = cx + padW / 2 - icoSz - 1.2;
+          out += `<g transform="translate(${ixEnd.toFixed(2)},${iy.toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${icoEnd.svg.replace(/currentColor/g, ink)}</g>`;
+        }
+        return out;
+      }
+
+      // VERTICAL LAYOUT ('top', 'bottom', or 'none')
+      const minD = Math.min(padW, padH);
+      const baseLblFs = Math.min(7.8, minD * (hasIco ? 0.25 : 0.36)) * pf.scale;
+      const lblFit = rawLbl ? fitText(rawLbl, padW, baseLblFs, 3.2, pf.charFactor) : { text: '', fs: 0 };
+      const baseSubFs = Math.min(4.9, (lblFit.fs || minD * 0.22 * pf.scale) * 0.72);
+      const wantSub = rawSub && (padH >= (hasIco ? 16.5 : 12.0));
+      const subFit = wantSub ? fitText(rawSub, padW, baseSubFs, 2.8, pf.charFactor) : { text: '', fs: 0 };
+
+      const textBlockH = (lblFit.text ? lblFit.fs * 1.12 : 0) + (subFit.text ? subFit.fs * 1.15 : 0);
+      const availForIco = hasIco ? (textBlockH > 0 ? Math.max(4.8, padH - textBlockH - 2.2) : Math.min(padW * 0.68, padH * 0.68)) : 0;
+      const icoSz = hasIco ? Math.max(4.8, Math.min(13.2, availForIco)) : 0;
+
+      const gap = (hasIco && textBlockH > 0) ? 1.8 : 0;
+      const totalH = icoSz + gap + textBlockH;
+      let yCursor = cy - totalH / 2;
+
+      const renderIconAt = (iy) => {
         const ix = cx - icoSz / 2;
-        const iy = yCursor;
-        const inner = ico.svg.replace(/currentColor/g, ink);
-        out += `<g transform="translate(${ix.toFixed(2)},${iy.toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${inner}</g>`;
-        yCursor += icoSz + 1.8;
-      }
+        return `<g transform="translate(${ix.toFixed(2)},${iy.toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+      };
+      const renderTextAt = (yStart) => {
+        let ty = yStart, tOut = '';
+        if (lblFit.text) {
+          tOut += `<text x="${cx.toFixed(2)}" y="${(ty + lblFit.fs * 0.82).toFixed(2)}" text-anchor="middle" font-family="${escXml(pf.stack)}" font-size="${lblFit.fs.toFixed(2)}" font-weight="700" fill="${ink}" pointer-events="none">${escXml(lblFit.text)}</text>`;
+          ty += lblFit.fs * 1.12;
+        }
+        if (subFit.text) {
+          tOut += `<text x="${cx.toFixed(2)}" y="${(ty + subFit.fs * 0.82).toFixed(2)}" text-anchor="middle" font-family="${escXml(pf.stack)}" font-size="${subFit.fs.toFixed(2)}" font-weight="600" fill="${effSubInk}" pointer-events="none">${escXml(subFit.text)}</text>`;
+        }
+        return tOut;
+      };
 
-      if (lblFit.text) {
-        const baselineY = yCursor + lblFit.fs * 0.82;
-        out += `<text x="${cx.toFixed(2)}" y="${baselineY.toFixed(2)}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="${lblFit.fs.toFixed(2)}" font-weight="700" fill="${ink}" pointer-events="none">${escXml(lblFit.text)}</text>`;
-        yCursor += lblFit.fs * 1.15;
+      if (hasIco && iconPos === 'bottom') {
+        out += renderTextAt(yCursor);
+        out += renderIconAt(yCursor + textBlockH + gap);
+      } else {
+        if (hasIco) {
+          out += renderIconAt(yCursor);
+          yCursor += icoSz + gap;
+        }
+        out += renderTextAt(yCursor);
       }
-
-      if (subFit.text) {
-        const subBaselineY = yCursor + subFit.fs * 0.82;
-        out += `<text x="${cx.toFixed(2)}" y="${subBaselineY.toFixed(2)}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="${subFit.fs.toFixed(2)}" font-weight="600" fill="${col.subInk}" pointer-events="none">${escXml(subFit.text)}</text>`;
-      }
-
-      return out;
+      return glowGrp ? `<g${glowGrp}>${out}</g>` : out;
     }
 
     function padColors(cfg) {
       const st = (cfg && cfg.style) || defStyle;
-      if (st === 'blank') return { st, fill: col.glass, stroke: showStencilSlots ? col.padStroke : 'none', dash: showStencilSlots ? '2 2' : '', op: showStencilSlots ? '0.45' : '1' };
-      if (st === 'minimal') return { st, fill: col.glass, stroke: showStencilSlots ? col.padStroke : 'none', dash: showStencilSlots ? '1.5 1.5' : '', op: '1' };
-      if (st === 'outline') return { st, fill: col.glass, stroke: col.padStroke, dash: '', op: '1' };
-      return { st: 'keycap', fill: (cfg && cfg.fill) || col.padFill, stroke: col.padStroke, dash: '', op: '1' };
+      const slotLum = isSlotLum(cfg);
+      if (darkPreview) {
+        if (st === 'blank') return { st, fill: '#0b1220', stroke: 'none', dash: '', op: '0.25', lum: false };
+        return {
+          st,
+          fill: slotLum ? 'rgba(16, 185, 129, 0.13)' : '#0f172a',
+          stroke: slotLum ? LUM_INK : '#1e293b',
+          dash: '',
+          op: '1',
+          lum: slotLum
+        };
+      }
+      const pStroke = slotLum ? '#10b981' : (facia.boundaryColor || col.padStroke);
+      if (st === 'blank') return { st, fill: glassCol, stroke: showStencilSlots ? pStroke : 'none', dash: showStencilSlots ? '2 2' : '', op: showStencilSlots ? '0.45' : '1', lum: slotLum };
+      if (st === 'minimal') return { st, fill: glassCol, stroke: showStencilSlots ? pStroke : 'none', dash: showStencilSlots ? '1.5 1.5' : '', op: '1', lum: slotLum };
+      if (st === 'outline') return { st, fill: glassCol, stroke: pStroke, dash: '', op: '1', lum: slotLum };
+      const padAlphaPct = bgImg ? Number(bgImg.padAlpha ?? 72) : 100;
+      const pFill = (cfg && cfg.fill)
+        || (bgImg ? hexToRgba(col.padFill || '#ffffff', padAlphaPct / 100) : (facia.bgColor ? 'rgba(255,255,255,0.06)' : col.padFill));
+      return { st: 'keycap', fill: pFill, stroke: pStroke, dash: '', op: '1', lum: slotLum };
     }
 
     function selRingRect(x, y, w, h, rx) {
@@ -1456,18 +1903,164 @@
           const n = Math.min(12, Math.max(2, Number(surfCfg.segments || 6)));
           const span = 360 / n;
           const off = Number(surfCfg.offset_deg || 0);
+          const ringThick = Math.max(8, s.rOut - s.rIn);
           for (let i = 0; i < n; i++) {
             const sKey = `hue_seg_${i + 1}`;
             const cfg = pads[sKey] || {};
             const pc = padColors(cfg);
             const sDeg = off + i * span + 1.5, eDeg = off + (i + 1) * span - 1.5;
+            const midDeg = ((off + (i + 0.5) * span) % 360 + 360) % 360;
             const d = ringWedgePath(s.cx, s.cy, s.rIn, s.rOut, sDeg, eDeg);
             const isSelected = selKey === sKey;
-            body += `<path class="mbx-seg-hit" data-seg-act="${sKey}" data-pad-key="${sKey}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} d="${d}" fill="${pc.fill}" stroke="${isSelected ? col.accent : pc.stroke}" stroke-width="${isSelected ? 2 : 1.05}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} style="cursor:pointer"/>`;
-            const mp = polarPt(s.cx, s.cy, (s.rIn + s.rOut) / 2, off + (i + 0.5) * span);
-            const defL = (surfCfg.labels && surfCfg.labels[i]) || `S${i + 1}`;
+            const isLumSeg = Boolean((lumCfg.enabled && lumCfg.slots) || cfg.luminous);
+            const glowSeg = isLumSeg ? ` filter="url(#glow_${u})"` : '';
+            body += `<path class="mbx-seg-hit" data-seg-act="${sKey}" data-pad-key="${sKey}" data-sdeg="${sDeg.toFixed(1)}" data-edeg="${eDeg.toFixed(1)}" data-cx="${s.cx}" data-cy="${s.cy}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} d="${d}" fill="${pc.fill}" stroke="${isSelected ? col.accent : pc.stroke}" stroke-width="${isSelected ? 2 : 1.05}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''}${glowSeg} style="cursor:pointer"/>`;
+
+            const defL = (surfCfg.labels && surfCfg.labels[i]) || `${i + 1}`;
+            const lblStr = (cfg && cfg.label !== undefined) ? String(cfg.label).trim() : defL;
+            const arcSpan = Math.max(10, eDeg - sDeg);
+            // Default wide ring segments (>= 50 deg) to 'left' so icon sits in the angular flank beside Main+Sub text!
+            const iconPos = (cfg && cfg.iconPos) || (arcSpan >= 50 ? 'left' : 'top');
+            const icoKey = iconPos === 'none' ? 'none' : ((cfg && cfg.icon) || 'none');
+            const ico = FACIA_ICONS[icoKey];
+            const hasIco = Boolean(ico && ico.svg);
+            const endKey = iconPos === 'both' ? ((cfg && cfg.iconEnd) || icoKey) : 'none';
+            const icoEnd = FACIA_ICONS[endKey];
+            const hasEndIco = Boolean(iconPos === 'both' && icoEnd && icoEnd.svg);
+
+            const ink = darkPreview ? (isLumSeg ? LUM_CORE : DIM_NIGHT_INK) : ((cfg && cfg.color) || col.ink);
+            const segSubInk = darkPreview ? (isLumSeg ? LUM_INK : DIM_NIGHT_INK) : col.subInk;
+            const pf = resolvePadFont(cfg);
+
             if (pc.st !== 'blank') {
-              body += drawGlyphContent(mp.x, mp.y, (s.rOut - s.rIn) * 0.98, (s.rOut - s.rIn) * 0.98, cfg, defL, '');
+              const isLowerArc = midDeg > 95 && midDeg < 265;
+              const isSlider = Boolean(cfg && cfg.segmentMode === 'slider');
+              const isMf = Boolean(!isSlider && cfg && cfg.multifunc && cfg.multifunc.enabled);
+              const sMin = Number(cfg.sliderMin ?? 0);
+              const sMax = Number(cfg.sliderMax ?? 100);
+              const subStr = (cfg && cfg.sublabel !== undefined && String(cfg.sublabel).trim() !== '')
+                ? String(cfg.sublabel).trim()
+                : isSlider ? `${sMin}→${sMax}%`
+                : isMf ? `1-${cfg.multifunc.steps || 4} • Hold` : '';
+
+              // Helper: emit curved text along reading-order sub-arc [readStartDeg -> readEndDeg]
+              const emitSubArcText = (idSuffix, rBand, rStartDeg, rEndDeg, txt, desiredFs, minFs, weight, fillCol, fontStack) => {
+                if (!txt) return;
+                const subSpan = Math.abs(rEndDeg - rStartDeg);
+                if (subSpan < 8) return;
+                const arcLen = (subSpan * Math.PI / 180) * rBand;
+                const fitted = fitText(txt, arcLen + 2.5, desiredFs, minFs, pf.charFactor);
+                if (!fitted.text) return;
+                const pStart = polarPt(s.cx, s.cy, rBand, rStartDeg);
+                const pEnd = polarPt(s.cx, s.cy, rBand, rEndDeg);
+                const sweep = isLowerArc ? '0' : '1';
+                const lgFlag = subSpan > 180 ? '1' : '0';
+                const arcId = `arc_${u}_${i}_${idSuffix}`;
+                body += `<defs><path id="${arcId}" d="M ${pStart.x.toFixed(2)} ${pStart.y.toFixed(2)} A ${rBand.toFixed(2)} ${rBand.toFixed(2)} 0 ${lgFlag} ${sweep} ${pEnd.x.toFixed(2)} ${pEnd.y.toFixed(2)}"/></defs>`;
+                body += `<text font-family="${escXml(fontStack || pf.stack)}" font-size="${fitted.fs.toFixed(2)}" font-weight="${weight}" fill="${fillCol}" pointer-events="none"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle" dy="0.34em">${escXml(fitted.text)}</textPath></text>`;
+              };
+
+              if (arcSpan >= 42) {
+                // Reading-order left-to-right angles along the arc (so 'Left' is ALWAYS visual left, even on bottom slices!)
+                const padAng = Math.min(5.5, arcSpan * 0.08);
+                const readLeftDeg  = isLowerArc ? (eDeg - padAng) : (sDeg + padAng);
+                const readRightDeg = isLowerArc ? (sDeg + padAng) : (eDeg - padAng);
+                const dirSign = isLowerArc ? -1 : 1; // +dirSign moves from visual-left toward visual-right
+
+                const rMid = s.rIn + ringThick * 0.50;
+                const icoSz = Math.max(4.8, Math.min(7.4, ringThick * 0.44));
+                const icoSpanDeg = Math.min(arcSpan * 0.30, ((icoSz + 2.4) / Math.max(12, rMid)) * (180 / Math.PI));
+
+                if ((iconPos === 'left' || iconPos === 'right' || iconPos === 'both') && (hasIco || hasEndIco)) {
+                  // ANGULAR FLANK PLACEMENT: Icon(s) sit on Left / Right / Both flanks at rMid; Main + Sub text stay centered!
+                  let txtLeftDeg = readLeftDeg;
+                  let txtRightDeg = readRightDeg;
+
+                  if (hasIco && (iconPos === 'left' || iconPos === 'both')) {
+                    const iDeg = readLeftDeg + dirSign * (icoSpanDeg * 0.48);
+                    const ip = polarPt(s.cx, s.cy, rMid, iDeg);
+                    body += `<g transform="translate(${(ip.x - icoSz / 2).toFixed(2)},${(ip.y - icoSz / 2).toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+                    txtLeftDeg += dirSign * (icoSpanDeg * 0.95);
+                  }
+                  if (hasIco && iconPos === 'right') {
+                    const iDeg = readRightDeg - dirSign * (icoSpanDeg * 0.48);
+                    const ip = polarPt(s.cx, s.cy, rMid, iDeg);
+                    body += `<g transform="translate(${(ip.x - icoSz / 2).toFixed(2)},${(ip.y - icoSz / 2).toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+                    txtRightDeg -= dirSign * (icoSpanDeg * 0.95);
+                  }
+                  if (hasEndIco) {
+                    const iDegEnd = readRightDeg - dirSign * (icoSpanDeg * 0.48);
+                    const ipEnd = polarPt(s.cx, s.cy, rMid, iDegEnd);
+                    body += `<g transform="translate(${(ipEnd.x - icoSz / 2).toFixed(2)},${(ipEnd.y - icoSz / 2).toFixed(2)}) scale(${(icoSz / 24).toFixed(4)})" pointer-events="none">${icoEnd.svg.replace(/currentColor/g, ink)}</g>`;
+                    txtRightDeg -= dirSign * (icoSpanDeg * 0.95);
+                  }
+
+                  // Visual "above" vs "below" radii (accounting for lower-half flip so Main Label is always visually ABOVE Sub-Label!)
+                  const rVisualTop = isLowerArc ? (s.rIn + ringThick * 0.34) : (s.rIn + ringThick * 0.66);
+                  const rVisualBot = isLowerArc ? (s.rIn + ringThick * 0.69) : (s.rIn + ringThick * 0.31);
+                  const mainR = subStr ? rVisualTop : rMid;
+                  const baseMainFs = Math.max(4.0, Math.min(6.4, ringThick * (subStr ? 0.31 : 0.36))) * pf.scale;
+                  emitSubArcText('lbl', mainR, txtLeftDeg, txtRightDeg, lblStr, baseMainFs, 3.0, '800', ink, pf.stack);
+                  if (subStr && ringThick >= 12.5) {
+                    const baseSubFs = Math.max(3.1, Math.min(4.5, ringThick * 0.23)) * pf.scale;
+                    emitSubArcText('sub', rVisualBot, txtLeftDeg, txtRightDeg, subStr, baseSubFs, 2.7, '700', segSubInk, pf.stack);
+                  }
+                } else {
+                  // RADIAL ('top', 'bottom', or 'none' text-only): Visually upright order with wide separation so zero overlap!
+                  const rVisHigh = isLowerArc ? (s.rIn + ringThick * 0.24) : (s.rIn + ringThick * 0.77);
+                  const rVisMid  = s.rIn + ringThick * 0.50;
+                  const rVisLow  = isLowerArc ? (s.rIn + ringThick * 0.77) : (s.rIn + ringThick * 0.24);
+
+                  if (hasIco && iconPos === 'top') {
+                    const ip = polarPt(s.cx, s.cy, rVisHigh, midDeg);
+                    const isz = Math.max(4.4, Math.min(6.4, ringThick * 0.33));
+                    body += `<g transform="translate(${(ip.x - isz / 2).toFixed(2)},${(ip.y - isz / 2).toFixed(2)}) scale(${(isz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+                    const lblR = subStr ? (isLowerArc ? s.rIn + ringThick * 0.53 : s.rIn + ringThick * 0.47) : rVisLow;
+                    emitSubArcText('lbl', lblR, readLeftDeg, readRightDeg, lblStr, Math.min(5.6, ringThick * 0.27) * pf.scale, 2.9, '800', ink, pf.stack);
+                    if (subStr && ringThick >= 16) {
+                      emitSubArcText('sub', rVisLow, readLeftDeg, readRightDeg, subStr, Math.min(4.0, ringThick * 0.20) * pf.scale, 2.6, '700', segSubInk, pf.stack);
+                    }
+                  } else if (hasIco && iconPos === 'bottom') {
+                    const ip = polarPt(s.cx, s.cy, rVisLow, midDeg);
+                    const isz = Math.max(4.4, Math.min(6.4, ringThick * 0.33));
+                    body += `<g transform="translate(${(ip.x - isz / 2).toFixed(2)},${(ip.y - isz / 2).toFixed(2)}) scale(${(isz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+                    const lblR = subStr ? rVisHigh : rVisHigh;
+                    emitSubArcText('lbl', lblR, readLeftDeg, readRightDeg, lblStr, Math.min(5.6, ringThick * 0.27) * pf.scale, 2.9, '800', ink, pf.stack);
+                    if (subStr && ringThick >= 16) {
+                      emitSubArcText('sub', rVisMid, readLeftDeg, readRightDeg, subStr, Math.min(4.0, ringThick * 0.20) * pf.scale, 2.6, '700', segSubInk, pf.stack);
+                    }
+                  } else {
+                    // Text Only ('none')
+                    const mainR = subStr ? (isLowerArc ? s.rIn + ringThick * 0.35 : s.rIn + ringThick * 0.65) : rVisMid;
+                    const subR  = isLowerArc ? s.rIn + ringThick * 0.68 : s.rIn + ringThick * 0.32;
+                    emitSubArcText('lbl', mainR, readLeftDeg, readRightDeg, lblStr, Math.min(6.4, ringThick * 0.35) * pf.scale, 3.1, '800', ink, pf.stack);
+                    if (subStr) {
+                      emitSubArcText('sub', subR, readLeftDeg, readRightDeg, subStr, Math.min(4.5, ringThick * 0.24) * pf.scale, 2.7, '700', segSubInk, pf.stack);
+                    }
+                  }
+                }
+
+                // Configurable slider track (dot pitch + end arrows) along outer rim
+                if (isSlider) {
+                  const trkR = s.rIn + ringThick * 0.90;
+                  body += renderSliderTrackMarkup({
+                    kind: 'arc', cx: s.cx, cy: s.cy, r: trkR, sDeg, eDeg,
+                    pitch: cfg.sliderPitch ?? facia.sliderPitch ?? 2.2,
+                    arrows: cfg.sliderArrows || facia.sliderArrows || 'chevron',
+                    color: darkPreview && isLumSeg ? LUM_INK : ink,
+                    sMin, sMax
+                  });
+                }
+              } else {
+                const mp = polarPt(s.cx, s.cy, (s.rIn + s.rOut) / 2, midDeg);
+                if (hasIco) {
+                  const isz = Math.max(5.5, Math.min(8.5, ringThick * 0.56));
+                  body += `<g transform="translate(${(mp.x - isz / 2).toFixed(2)},${(mp.y - isz / 2).toFixed(2)}) scale(${(isz / 24).toFixed(4)})" pointer-events="none">${ico.svg.replace(/currentColor/g, ink)}</g>`;
+                } else if (lblStr) {
+                  const cFs = Math.max(4.4, Math.min(6.6, ringThick * 0.42)) * pf.scale;
+                  body += `<text x="${mp.x.toFixed(2)}" y="${(mp.y + cFs * 0.35).toFixed(2)}" text-anchor="middle" font-family="${escXml(pf.stack)}" font-size="${cFs.toFixed(2)}" font-weight="800" fill="${ink}" pointer-events="none">${escXml(lblStr.slice(0, 4))}</text>`;
+                }
+              }
             }
           }
           return;
@@ -1481,14 +2074,18 @@
           if (showStencilSlots) body += `<circle class="mbx-hit" data-act="hue" data-pad-key="${s.key}" data-blanked="1" cx="${s.cx}" cy="${s.cy}" r="${rMid}" fill="none" stroke="${col.padStroke}" stroke-width="${rw}" stroke-dasharray="2 3" opacity="0.3" style="cursor:pointer"/>`;
           return;
         }
-        if (isMono || facia.sliderStyle === 'mono_ticks' || facia.sliderStyle === 'minimal') {
+        if (darkPreview) {
+          const glowR = pc.lum ? ` filter="url(#glow_${u})"` : '';
+          body += `<circle cx="${s.cx}" cy="${s.cy}" r="${s.rOut}" fill="none" stroke="${pc.stroke}" stroke-width="1.1"${glowR}/>`;
+          body += `<circle cx="${s.cx}" cy="${s.cy}" r="${s.rIn}" fill="none" stroke="${pc.stroke}" stroke-width="1.1"${glowR}/>`;
+          body += `<circle cx="${s.cx}" cy="${s.cy}" r="${rMid}" fill="none" stroke="${pc.lum ? LUM_INK : DIM_NIGHT_INK}" stroke-width="1.4" stroke-dasharray="2.4 3.0" opacity="0.85"${glowR} pointer-events="none"/>`;
+          body += `<circle class="mbx-hit" data-act="hue" data-pad-key="${s.key}" cx="${s.cx}" cy="${s.cy}" r="${rMid}" fill="none" stroke="transparent" stroke-width="${rw}" style="cursor:pointer"/>`;
+        } else if (isMono || facia.sliderStyle === 'mono_ticks' || facia.sliderStyle === 'minimal') {
           body += `<circle cx="${s.cx}" cy="${s.cy}" r="${s.rOut}" fill="none" stroke="${col.padStroke}" stroke-width="0.9"/>`;
           body += `<circle cx="${s.cx}" cy="${s.cy}" r="${s.rIn}" fill="none" stroke="${col.padStroke}" stroke-width="0.9"/>`;
           body += `<circle class="mbx-hit" data-act="hue" data-pad-key="${s.key}" cx="${s.cx}" cy="${s.cy}" r="${rMid}" fill="none" stroke="${col.ink}" stroke-width="${facia.sliderStyle === 'minimal' ? 1.5 : rw * 0.55}" ${facia.sliderStyle === 'mono_ticks' ? 'stroke-dasharray="2.2 3.2"' : ''} opacity="${facia.sliderStyle === 'minimal' ? 0.5 : 0.75}" style="cursor:pointer"/>`;
-          // Invisible wide hit ring for smooth dragging
           body += `<circle class="mbx-hit" data-act="hue" data-pad-key="${s.key}" cx="${s.cx}" cy="${s.cy}" r="${rMid}" fill="none" stroke="transparent" stroke-width="${rw}" style="cursor:pointer"/>`;
         } else {
-          // Crisp 12-hue color ring
           const cols12 = ['#ef4444','#f97316','#eab308','#84cc16','#22c55e','#14b8a6','#06b6d4','#3b82f6','#6366f1','#a855f7','#ec4899','#f43f5e'];
           for (let i = 0; i < 12; i++) {
             body += `<path d="${ringWedgePath(s.cx, s.cy, s.rIn, s.rOut, i * 30, (i + 1) * 30 + 0.6)}" fill="${cols12[i]}" pointer-events="none"/>`;
@@ -1516,40 +2113,125 @@
             const rw = vert ? s.w : (s.w - gap * (n - 1)) / n;
             const rh = vert ? (s.h - gap * (n - 1)) / n : s.h;
             const isSelected = selKey === sKey;
-            body += `<rect class="mbx-seg-hit" data-seg-act="${sKey}" data-pad-key="${sKey}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} x="${rx.toFixed(2)}" y="${ry.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" rx="3" fill="${pc.fill}" stroke="${isSelected ? col.accent : pc.stroke}" stroke-width="${isSelected ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} style="cursor:pointer"/>`;
+            body += `<rect class="mbx-seg-hit" data-seg-act="${sKey}" data-pad-key="${sKey}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} x="${rx.toFixed(2)}" y="${ry.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" rx="3" fill="${pc.fill}" stroke="${isSelected ? col.accent : pc.stroke}" stroke-width="${isSelected ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''}${pc.lum ? ` filter="url(#glow_${u})"` : ''} style="cursor:pointer"/>`;
             const defL = (surfCfg.labels && surfCfg.labels[i]) || `${i + 1}`;
-            if (pc.st !== 'blank') body += drawGlyphContent(rx + rw / 2, ry + rh / 2, rw, rh, cfg, defL, '');
+            if (pc.st !== 'blank') {
+              const barInk = (cfg && cfg.color) || col.ink;
+              const isBarSlider = Boolean(cfg && cfg.segmentMode === 'slider');
+              const iconOnBottom = (cfg && cfg.iconPos) === 'bottom';
+              // Reserve 3.2mm at the edge opposite the icon for the dashed linear slider track
+              const glyphCy = isBarSlider ? (iconOnBottom ? (ry + rh / 2 + 1.4) : (ry + rh / 2 - 1.4)) : (ry + rh / 2);
+              const glyphH = isBarSlider ? Math.max(8, rh - 3.2) : rh;
+              body += drawGlyphContent(rx + rw / 2, glyphCy, rw, glyphH, cfg, defL, '');
+              if (isBarSlider) {
+                const trkCol = darkPreview ? (isSlotLum(cfg) ? LUM_INK : DIM_NIGHT_INK) : barInk;
+                const sMinB = Number(cfg.sliderMin ?? 0), sMaxB = Number(cfg.sliderMax ?? 100);
+                const pitchB = cfg.sliderPitch ?? facia.sliderPitch ?? 2.2;
+                const arrowsB = cfg.sliderArrows || facia.sliderArrows || 'chevron';
+                if (vert && rw < rh * 0.75) {
+                  const trkX = rx + rw - 2.5;
+                  body += renderSliderTrackMarkup({ kind: 'line', x1: trkX, y1: ry + rh - 3.2, x2: trkX, y2: ry + 3.2, pitch: pitchB, arrows: arrowsB, color: trkCol, sMin: sMinB, sMax: sMaxB });
+                } else {
+                  const trkY = iconOnBottom ? (ry + 2.7) : (ry + rh - 2.7);
+                  body += renderSliderTrackMarkup({ kind: 'line', x1: rx + 3.0, y1: trkY, x2: rx + rw - 3.0, y2: trkY, pitch: pitchB, arrows: arrowsB, color: trkCol, sMin: sMinB, sMax: sMaxB });
+                }
+              }
+            }
           }
           return;
         }
 
-        // Continuous Bar (not segmented)
+        // Continuous Bar (not segmented) — supports full Stencil Slider customisation (arrows, dot pitch, text, dual icons & luminous glow!)
         const cfg = pads[s.key] || {};
         const pc = padColors(cfg);
         if (pc.st === 'blank') {
           if (showStencilSlots) body += `<rect class="mbx-hit" data-act="${s.act}" data-pad-key="${s.key}" data-blanked="1" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${Math.min(s.w, s.h) / 2}" fill="none" stroke="${col.padStroke}" stroke-dasharray="2 2" opacity="0.35" style="cursor:pointer"/>`;
           return;
         }
+        const forceFactory = cfg.sliderArrows === 'factory';
+        const hasCustomLook = !forceFactory && Boolean(
+          cfg.customTrack || cfg.sliderArrows || cfg.sliderPitch !== undefined ||
+          cfg.label !== undefined || cfg.sublabel !== undefined ||
+          (cfg.icon && cfg.icon !== 'none') || (cfg.iconEnd && cfg.iconEnd !== 'none') ||
+          cfg.style || isMono || darkPreview || pc.lum
+        );
         let gradFill = pc.fill;
-        if (!isMono && facia.sliderStyle !== 'mono_ticks' && facia.sliderStyle !== 'minimal') {
+        if (!hasCustomLook && !isMono && facia.sliderStyle !== 'mono_ticks' && facia.sliderStyle !== 'minimal') {
           if (s.act === 'hue') gradFill = `url(#st_rgb_${u})`;
           else if (s.act === 'kelvin' || s.act === 'saturation') gradFill = vert ? `url(#st_cct_v_${u})` : `url(#st_cct_${u})`;
           else gradFill = vert ? `url(#st_bri_v_${u})` : `url(#st_bri_h_${u})`;
+        } else if (forceFactory && darkPreview) {
+          gradFill = pc.fill;
         }
         const rad = Math.min(6, Math.min(s.w, s.h) / 2);
-        body += `<rect class="mbx-hit" data-act="${s.act}" ${s.zone !== undefined ? `data-zone="${s.zone}"` : ''} data-pad-key="${s.key}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${rad}" fill="${gradFill}" stroke="${col.padStroke}" stroke-width="0.95" style="cursor:pointer"/>`;
-        // Graduated ticks for monochrome/minimal clarity
-        const steps = 6;
-        for (let t = 1; t < steps; t++) {
+        const glowBar = pc.lum ? ` filter="url(#glow_${u})"` : '';
+        const barStroke = selKey === s.key ? col.accent : pc.stroke;
+        body += `<rect class="mbx-hit" data-act="${s.act}" ${s.zone !== undefined ? `data-zone="${s.zone}"` : ''} data-pad-key="${s.key}" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${rad}" fill="${gradFill}" stroke="${barStroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}"${glowBar} style="cursor:pointer"/>`;
+
+        if (hasCustomLook) {
+          const trkCol = darkPreview ? (pc.lum ? LUM_INK : DIM_NIGHT_INK) : ((cfg && cfg.color) || col.ink);
+          const inkV = darkPreview ? (pc.lum ? LUM_CORE : DIM_NIGHT_INK) : ((cfg && cfg.color) || col.ink);
+          const subInkV = darkPreview ? (pc.lum ? LUM_INK : DIM_NIGHT_INK) : col.subInk;
+          const pitchU = cfg.sliderPitch ?? facia.sliderPitch ?? 2.2;
+          const arrowsU = (cfg.sliderArrows && cfg.sliderArrows !== 'factory') ? cfg.sliderArrows : (facia.sliderArrows || 'chevron');
+          const sMinU = Number(cfg.sliderMin ?? 0), sMaxU = Number(cfg.sliderMax ?? 100);
+          const glowTxt = (darkPreview && pc.lum) ? ` filter="url(#glow_${u})"` : '';
+
           if (vert) {
-            const ty = s.y + (t * s.h) / steps;
-            body += `<line x1="${s.x + 3}" y1="${ty.toFixed(1)}" x2="${s.x + s.w - 3}" y2="${ty.toFixed(1)}" stroke="${isMono ? col.ink : '#ffffff'}" stroke-opacity="0.55" stroke-width="0.8" pointer-events="none"/>`;
+            const hasTextOrIco = Boolean(cfg.label !== undefined || cfg.sublabel !== undefined || (cfg.icon && cfg.icon !== 'none') || (cfg.iconEnd && cfg.iconEnd !== 'none'));
+            const trkX = hasTextOrIco ? (s.x + s.w - 2.7) : (s.x + s.w / 2);
+            body += renderSliderTrackMarkup({ kind: 'line', x1: trkX, y1: s.y + s.h - 3.8, x2: trkX, y2: s.y + 3.8, pitch: pitchU, arrows: arrowsU, color: trkCol, sMin: sMinU, sMax: sMaxU });
+
+            if (hasTextOrIco) {
+              const rawPosU = cfg.iconPos || 'both';
+              const topIcoKey = (rawPosU === 'both') ? (cfg.iconEnd || cfg.icon || 'sun') : ((rawPosU === 'top' || rawPosU === 'right') ? (cfg.icon || 'none') : 'none');
+              const botIcoKey = (rawPosU === 'both') ? (cfg.icon || 'moon') : ((rawPosU === 'bottom' || rawPosU === 'left') ? (cfg.icon || 'none') : 'none');
+              const icoTop = FACIA_ICONS[topIcoKey], icoBot = FACIA_ICONS[botIcoKey];
+              const iszV = Math.max(4.6, Math.min(7.6, (s.w - 3.2) * 0.62));
+              const cxV = s.x + (s.w - 3.2) / 2;
+              let gInner = '';
+              if (icoTop && icoTop.svg) {
+                gInner += `<g transform="translate(${(cxV - iszV / 2).toFixed(2)},${(s.y + 5.0).toFixed(2)}) scale(${(iszV / 24).toFixed(4)})" pointer-events="none">${icoTop.svg.replace(/currentColor/g, inkV)}</g>`;
+              }
+              if (icoBot && icoBot.svg) {
+                gInner += `<g transform="translate(${(cxV - iszV / 2).toFixed(2)},${(s.y + s.h - iszV - 5.0).toFixed(2)}) scale(${(iszV / 24).toFixed(4)})" pointer-events="none">${icoBot.svg.replace(/currentColor/g, inkV)}</g>`;
+              }
+              const vLbl = cfg.label !== undefined ? String(cfg.label).trim() : '';
+              const vSub = cfg.sublabel !== undefined ? String(cfg.sublabel).trim() : (vLbl ? `${sMinU}\u2192${sMaxU}%` : '');
+              const pfV = resolvePadFont(cfg);
+              const availRotW = Math.max(14, s.h - (icoTop && icoTop.svg ? iszV + 7 : 5) - (icoBot && icoBot.svg ? iszV + 7 : 5));
+              const cyV = s.y + s.h / 2;
+              if (vLbl) {
+                const fitL = fitText(vLbl, availRotW, Math.min(5.5, (s.w - 3.5) * 0.46) * pfV.scale, 2.9, pfV.charFactor);
+                const xOff = vSub ? (cxV - 1.5) : cxV;
+                gInner += `<text transform="translate(${xOff.toFixed(2)},${cyV.toFixed(2)}) rotate(-90)" text-anchor="middle" dy="0.34em" font-family="${escXml(pfV.stack)}" font-size="${fitL.fs.toFixed(2)}" font-weight="800" fill="${inkV}" pointer-events="none">${escXml(fitL.text)}</text>`;
+              }
+              if (vSub && s.w >= 12) {
+                const fitS = fitText(vSub, availRotW, Math.min(3.9, (s.w - 3.5) * 0.33) * pfV.scale, 2.5, pfV.charFactor);
+                gInner += `<text transform="translate(${(cxV + 2.4).toFixed(2)},${cyV.toFixed(2)}) rotate(-90)" text-anchor="middle" dy="0.34em" font-family="${escXml(pfV.stack)}" font-size="${fitS.fs.toFixed(2)}" font-weight="700" fill="${subInkV}" pointer-events="none">${escXml(fitS.text)}</text>`;
+              }
+              body += glowTxt ? `<g${glowTxt}>${gInner}</g>` : gInner;
+            }
           } else {
-            const tx = s.x + (t * s.w) / steps;
-            body += `<line x1="${tx.toFixed(1)}" y1="${s.y + 3}" x2="${tx.toFixed(1)}" y2="${s.y + s.h - 3}" stroke="${isMono ? col.ink : '#ffffff'}" stroke-opacity="0.55" stroke-width="0.8" pointer-events="none"/>`;
+            const trkY = s.y + s.h - 2.6;
+            body += renderSliderTrackMarkup({ kind: 'line', x1: s.x + 3.8, y1: trkY, x2: s.x + s.w - 3.8, y2: trkY, pitch: pitchU, arrows: arrowsU, color: trkCol, sMin: sMinU, sMax: sMaxU });
+            if (cfg.label !== undefined || cfg.sublabel !== undefined || (cfg.icon && cfg.icon !== 'none') || (cfg.iconEnd && cfg.iconEnd !== 'none')) {
+              body += drawGlyphContent(s.x + s.w / 2, s.y + (s.h - 2.6) / 2, s.w, s.h - 2.8, Object.assign({ segmentMode: 'slider' }, cfg), '', '');
+            }
+          }
+        } else {
+          const steps = 6;
+          const tickCol = darkPreview ? (pc.lum ? LUM_INK : DIM_NIGHT_INK) : (isMono ? col.ink : '#ffffff');
+          for (let t = 1; t < steps; t++) {
+            if (vert) {
+              const ty = s.y + (t * s.h) / steps;
+              body += `<line x1="${s.x + 3}" y1="${ty.toFixed(1)}" x2="${s.x + s.w - 3}" y2="${ty.toFixed(1)}" stroke="${tickCol}" stroke-opacity="0.6" stroke-width="0.8" pointer-events="none"/>`;
+            } else {
+              const tx = s.x + (t * s.w) / steps;
+              body += `<line x1="${tx.toFixed(1)}" y1="${s.y + 3}" x2="${tx.toFixed(1)}" y2="${s.y + s.h - 3}" stroke="${tickCol}" stroke-opacity="0.6" stroke-width="0.8" pointer-events="none"/>`;
+            }
           }
         }
-        if (cfg.icon || cfg.label) body += drawGlyphContent(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h, cfg, '', '');
         if (selKey === s.key) body += selRingRect(s.x, s.y, s.w, s.h, rad);
         return;
       }
@@ -1558,7 +2240,9 @@
         const cfg = pads[s.key] || {};
         const pc = padColors(cfg);
         const zAttr = (s.zone !== undefined && s.zone !== null) ? `data-zone="${s.zone}"` : '';
-        body += `<circle class="mbx-hit" data-act="${s.act}" ${zAttr} data-pad-key="${s.key}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}" style="cursor:pointer"/>`;
+        const isLumC = Boolean((facia.luminous && facia.luminous.enabled && facia.luminous.slots) || (cfg && cfg.luminous));
+        const glowAttrC = isLumC ? ` filter="url(#glow_${u})"` : '';
+        body += `<circle class="mbx-hit" data-act="${s.act}" ${zAttr} data-pad-key="${s.key}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}"${glowAttrC} style="cursor:pointer"/>`;
         if (pc.st !== 'blank') {
           body += drawGlyphContent(s.cx, s.cy, s.r * 1.85, s.r * 1.85, cfg, s.label, s.sublabel || '');
         } else if (showStencilSlots && selKey === s.key) {
@@ -1572,12 +2256,13 @@
         const cfg = pads[s.key] || {};
         const pc = padColors(cfg);
         const z = s.zone ?? 1;
+        const glowRocker = pc.lum ? ` filter="url(#glow_${u})"` : '';
+        const pipInk = darkPreview ? (pc.lum ? LUM_INK : DIM_NIGHT_INK) : col.subInk;
         body += `<g data-pad-key="${s.key}">
-          <rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx || 5}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}"/>`;
+          <rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx || 5}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}"${glowRocker}/>`;
         if (pc.st !== 'blank') {
-          // Subtle top '|' and bottom 'o' rocker pips + room icon/name in center
-          body += `<line x1="${(s.x + s.w / 2).toFixed(1)}" y1="${(s.y + 4.5).toFixed(1)}" x2="${(s.x + s.w / 2).toFixed(1)}" y2="${(s.y + 9).toFixed(1)}" stroke="${col.subInk}" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`;
-          body += `<circle cx="${(s.x + s.w / 2).toFixed(1)}" cy="${(s.y + s.h - 6.8).toFixed(1)}" r="2.3" fill="none" stroke="${col.subInk}" stroke-width="1.0" pointer-events="none"/>`;
+          body += `<line x1="${(s.x + s.w / 2).toFixed(1)}" y1="${(s.y + 4.5).toFixed(1)}" x2="${(s.x + s.w / 2).toFixed(1)}" y2="${(s.y + 9).toFixed(1)}" stroke="${pipInk}" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`;
+          body += `<circle cx="${(s.x + s.w / 2).toFixed(1)}" cy="${(s.y + s.h - 6.8).toFixed(1)}" r="2.3" fill="none" stroke="${pipInk}" stroke-width="1.0" pointer-events="none"/>`;
           body += drawGlyphContent(s.x + s.w / 2, s.y + s.h / 2, s.w * 0.92, s.h * 0.56, cfg, s.label, s.sublabel || '');
         }
         body += `<rect class="mbx-hit" data-act="zone_on" data-zone="${z}" data-pad-key="${s.key}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} x="${s.x}" y="${s.y}" width="${s.w}" height="${(s.h * 0.5).toFixed(1)}" fill="transparent" style="cursor:pointer"/>`;
@@ -1591,7 +2276,8 @@
       const pc = padColors(cfg);
       const zAttr = (s.zone !== undefined && s.zone !== null) ? `data-zone="${s.zone}"` : '';
       const vAttr = (s.val !== undefined && s.val !== null) ? `data-val="${s.val}"` : '';
-      body += `<rect class="mbx-hit" data-act="${s.act}" ${zAttr} ${vAttr} data-pad-key="${s.key}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx || 4}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}" style="cursor:pointer"/>`;
+      const glowRect = pc.lum ? ` filter="url(#glow_${u})"` : '';
+      body += `<rect class="mbx-hit" data-act="${s.act}" ${zAttr} ${vAttr} data-pad-key="${s.key}" ${pc.st === 'blank' ? 'data-blanked="1"' : ''} x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx || 4}" fill="${pc.fill}" stroke="${selKey === s.key ? col.accent : pc.stroke}" stroke-width="${selKey === s.key ? 1.9 : 1.0}" ${pc.dash ? `stroke-dasharray="${pc.dash}"` : ''} opacity="${pc.op}"${glowRect} style="cursor:pointer"/>`;
       if (pc.st !== 'blank') {
         body += drawGlyphContent(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h, cfg, s.label, s.sublabel || '');
       }
@@ -1675,13 +2361,54 @@
       ];
     }
 
-    // 2. 8-ZONE B8: Standardized 8-Room Icons + Segmented Device Ring / Sliders!
+    // 2. 8-ZONE B8: Standardised 8-Room Icons + Segmented Device Ring / Sliders!
     if (m.layout === 'b8') {
       return [
         {
+          id: 'b8_hybrid_arc_and_bar_sliders',
+          name: 'Hybrid Arc + Straight Sliders Showcase (0–100% & 100–0%)',
+          desc: 'Showcases centered circular arc labels with top/bottom icons, 2 curved variable sliders (Blinds 100–0%, Fan 0–100%), 2 multi-tap slices, AND 2 straight variable sliders (Dimmer 15–100%, Warmth 0–100%)',
+          touch_zones: {
+            hue_ring: { enabled: true, segments: 4, offset_deg: -45, zone_mask: 65535, labels: ['Blinds','Fan','Climate','Cinema'] },
+            sat_bar:  { enabled: true, segments: 2, offset_deg: 0,   zone_mask: 65535, labels: ['Dimmer','Warmth'] },
+            bri_bar:  { enabled: false, segments: 4, offset_deg: 0,  zone_mask: 65535, labels: ['','','',''] },
+            cct_bar:  { enabled: false, segments: 4, offset_deg: 0,  zone_mask: 65535, labels: ['','','',''] }
+          },
+          facia: {
+            enabled: true, theme: defTheme, fontFamily: 'geometric', fontScale: 105,
+            panelTitle: 'HYBRID SLIDER STUDIO', defaultPadStyle: 'keycap', showLedPinhole: true, hideLogo: true,
+            luminous: { enabled: true, border: true, header: true, slots: false },
+            pads: {
+              hue_seg_1: { icon: 'blinds',     iconEnd: 'sun',    iconPos: 'both',  label: 'Blinds',  sublabel: '100→0% Slide', segmentMode: 'slider', sliderMin: 100, sliderMax: 0, sliderPitch: 2.2, sliderArrows: 'chevron', luminous: true },
+              hue_seg_2: { icon: 'fan',        iconEnd: 'sparkles', iconPos: 'both', label: 'Fan Spd', sublabel: '0→100% Slide', segmentMode: 'slider', sliderMin: 0,   sliderMax: 100, sliderPitch: 1.5, sliderArrows: 'triangle', luminous: true },
+              hue_seg_3: { icon: 'ac',         iconPos: 'left',   label: 'Climate', sublabel: '1-5 • Hold', multifunc: { enabled: true, steps: 5, unit: 'Temp' } },
+              hue_seg_4: { icon: 'tv',         iconPos: 'right',  label: 'Cinema',  sublabel: 'Tap Toggle' },
+              sat_seg_1: { icon: 'sun',        iconPos: 'top',    label: 'Dimmer',  segmentMode: 'slider', sliderMin: 15,  sliderMax: 100, sliderPitch: 2.0, sliderArrows: 'dots', luminous: true },
+              sat_seg_2: { icon: 'coffee',     iconPos: 'top',    label: 'Warmth',  segmentMode: 'slider', sliderMin: 0,   sliderMax: 100, sliderPitch: 2.6, sliderArrows: 'ticks' },
+              bri_bar:   { customTrack: true, icon: 'moon', iconEnd: 'sun', iconPos: 'both', label: 'Master Dim', sublabel: '5\u2192100%', segmentMode: 'slider', sliderMin: 5, sliderMax: 100, sliderPitch: 2.0, sliderArrows: 'chevron', luminous: true },
+              center_w:  { icon: 'downlight',  iconPos: 'top',    label: 'Main W' },
+              btn_on:    { icon: 'power',      iconPos: 'top',    label: 'ON', luminous: true },
+              btn_off:   { icon: 'moon',       iconPos: 'top',    label: 'OFF' },
+              btn_sdn:   { icon: 'curtains',   iconPos: 'top',    label: 'Privacy' },
+              btn_m:     { icon: 'sparkles',   iconPos: 'top',    label: 'Scene' },
+              btn_sup:   { icon: 'speaker',    iconPos: 'top',    label: 'Sonos',   multifunc: { enabled: true, steps: 5, unit: 'Vol' } },
+              zone_0:    { icon: 'home_all',   label: 'All' },
+              zone_1:    { icon: 'sofa',       label: 'Living' },
+              zone_2:    { icon: 'kitchen',    label: 'Kitchen' },
+              zone_3:    { icon: 'dining',     label: 'Dining' },
+              zone_4:    { icon: 'bed',        label: 'Master' },
+              btn_60s:   { icon: 'lock',       label: 'Away' },
+              zone_5:    { icon: 'bed_single', label: 'Guest' },
+              zone_6:    { icon: 'desk',       label: 'Study' },
+              zone_7:    { icon: 'bath',       label: 'Bath' },
+              zone_8:    { icon: 'garden',     label: 'Patio' }
+            }
+          }
+        },
+        {
           id: 'b8_whole_home_devices',
-          name: '8-Room Standardized Icons + 6-Device Segmented Wheel',
-          desc: 'Zones 1-8 mapped to standardized rooms; Color Ring segmented into Fan (1-6), Blinds, Curtains, AC, Sonos & Strip',
+          name: '8-Room Standardised Icons + 6-Device Segmented Wheel',
+          desc: 'Zones 1-8 mapped to standardised rooms; Colour Ring segmented into Fan (1-6), Blinds, Curtains, AC, Sonos & Strip',
           touch_zones: {
             hue_ring: { enabled: true, segments: 6, offset_deg: -30, zone_mask: 65535, labels: ['Fan','Blinds','Curtains','AC','Audio','Strip'] },
             sat_bar:  { enabled: true, segments: 3, offset_deg: 0,   zone_mask: 65535, labels: ['Day','Relax','Cinema'] },
@@ -1721,7 +2448,7 @@
         },
         {
           id: 'b8_rooms_analog',
-          name: '8-Room Standardized Lighting (Continuous Wheel & Sliders)',
+          name: '8-Room Standardised Lighting (Continuous Wheel & Sliders)',
           desc: 'Keeps analog Color Wheel & Dimmer sliders while adding crisp Room Icons to Zones 1-8',
           touch_zones: {
             hue_ring: { enabled: false, segments: 6, offset_deg: 0, zone_mask: 65535, labels: ['','','','','',''] },
@@ -1749,14 +2476,90 @@
       ];
     }
 
-    // 3. STRIP / MULTI-ZONE PANELS (B1..B4, U1..U3, M4, B5): Standardized Room Rockers + Segmented Multi-Device Bars!
+    // 2b. K-SERIES ROTARY / COMPACT DIALS (K6 / K6B / K1 / FUT087): Dedicated Ring-Arc + Center Pad Templates!
+    if (/^k/i.test(m.id) || m.layout === 'k6' || m.kind === 'k6' || (m.zones === 1 && m.layout !== 'b0' && (!m.width_mm || m.width_mm <= 76))) {
+      return [
+        {
+          id: 'k6_hybrid_quadrant_sliders',
+          name: 'Hybrid 4-Quadrant Ring Sliders + Multi-Step (K6)',
+          desc: 'Splits the K6 touch ring into 2 curved Variable Sliders (Dimmer 10→100%, Blinds 100→0%) + 2 Tap/Step pads (Fan 1-5, Cinema)',
+          touch_zones: {
+            hue_ring: { enabled: true, segments: 4, offset_deg: -45, zone_mask: 65535, labels: ['Dimmer','Fan','Blinds','Cinema'] },
+            sat_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] },
+            bri_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] },
+            cct_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] }
+          },
+          facia: {
+            enabled: true, theme: defTheme, fontFamily: 'geometric', fontScale: 105,
+            panelTitle: 'K6 SMART DIAL', defaultPadStyle: 'keycap', showLedPinhole: true, hideLogo: true,
+            luminous: { enabled: true, border: true, header: true, slots: false },
+            pads: {
+              hue_seg_1: { icon: 'moon',     iconEnd: 'sun',      iconPos: 'both',  label: 'Dimmer', sublabel: '10→100%', segmentMode: 'slider', sliderMin: 10, sliderMax: 100, sliderPitch: 2.0, sliderArrows: 'chevron', luminous: true },
+              hue_seg_2: { icon: 'fan',      iconPos: 'left',     label: 'Fan',    sublabel: '1-5 • Hold', multifunc: { enabled: true, steps: 5, unit: 'Spd' } },
+              hue_seg_3: { icon: 'blinds',   iconEnd: 'sun',      iconPos: 'both',  label: 'Blinds', sublabel: '100→0%', segmentMode: 'slider', sliderMin: 100, sliderMax: 0, sliderPitch: 2.2, sliderArrows: 'triangle', luminous: true },
+              hue_seg_4: { icon: 'tv',       iconPos: 'right',    label: 'Cinema', sublabel: 'Toggle' },
+              center_w:  { icon: 'power',    iconPos: 'top',      label: 'Master', sublabel: 'Tap / Hold', luminous: true },
+              btn_on:    { icon: 'power',    iconPos: 'top',      label: 'ON', luminous: true }
+            }
+          }
+        },
+        {
+          id: 'k6_six_device_dial',
+          name: '6-Device Smart Room Ring (Fan / Blinds / AC / Sonos / Lights)',
+          desc: 'Turns K6 ring into 6 dedicated room device buttons with Step-Cycle & Hold toggle',
+          touch_zones: {
+            hue_ring: { enabled: true, segments: 6, offset_deg: -30, zone_mask: 65535, labels: ['Lights','Fan','Blinds','AC','Sonos','Scene'] },
+            sat_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] },
+            bri_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] },
+            cct_bar:  { enabled: false, segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['',''] }
+          },
+          facia: {
+            enabled: true, theme: defTheme, panelTitle: 'STUDIO DIAL', defaultPadStyle: 'keycap', showLedPinhole: true, hideLogo: true,
+            pads: {
+              hue_seg_1: { icon: 'bulb',     iconPos: 'top', label: 'Lights', multifunc: { enabled: true, steps: 4, unit: 'Bri' } },
+              hue_seg_2: { icon: 'fan',      iconPos: 'top', label: 'Fan',    multifunc: { enabled: true, steps: 5, unit: 'Spd' } },
+              hue_seg_3: { icon: 'blinds',   iconPos: 'top', label: 'Blinds', multifunc: { enabled: true, steps: 4, unit: 'Pos' } },
+              hue_seg_4: { icon: 'ac',       iconPos: 'top', label: 'AC',     multifunc: { enabled: true, steps: 4, unit: 'Temp' } },
+              hue_seg_5: { icon: 'speaker',  iconPos: 'top', label: 'Sonos',  multifunc: { enabled: true, steps: 5, unit: 'Vol' } },
+              hue_seg_6: { icon: 'sparkles', iconPos: 'top', label: 'Scene' }
+            }
+          }
+        }
+      ];
+    }
+
+    // 3. STRIP / MULTI-ZONE PANELS (B1..B4, U1..U3, M4, B5): Standardised Room Rockers + Segmented Multi-Device Bars!
     const topSurf = (m.kind === 'b1' || m.kind === 'u1') ? 'bri_bar' : (m.kind === 'b2' || m.kind === 'u2') ? 'cct_bar' : 'hue_ring';
     const segPref = topSurf === 'bri_bar' ? 'bri_seg_' : topSurf === 'cct_bar' ? 'cct_seg_' : 'hue_seg_';
     return [
       {
+        id: 'strip_dual_linear_sliders',
+        name: 'Dual Straight Variable Sliders (Sheer 0–100% + Blockout 100–0%)',
+        desc: 'Splits the straight top touch bar into two independent variable sliders (0–100% & inverted 100–0%) above 4 room rockers',
+        touch_zones: {
+          hue_ring: { enabled: topSurf === 'hue_ring', segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['Sheer','Blockout'] },
+          cct_bar:  { enabled: topSurf === 'cct_bar',  segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['Sheer','Blockout'] },
+          bri_bar:  { enabled: topSurf === 'bri_bar',  segments: 2, offset_deg: 0, zone_mask: 65535, labels: ['Sheer','Blockout'] },
+          sat_bar:  { enabled: false, segments: 4, offset_deg: 0, zone_mask: 65535, labels: ['','','',''] }
+        },
+        facia: {
+          enabled: true, theme: defTheme, fontFamily: 'sans', fontScale: 105,
+          panelTitle: 'DUAL LINEAR SLIDERS', defaultPadStyle: 'keycap', showLedPinhole: true, hideLogo: true,
+          pads: {
+            [segPref + '1']: { icon: 'curtains', iconEnd: 'sun', iconPos: 'both',   label: 'Sheer',    sublabel: '0→100% Slide', segmentMode: 'slider', sliderMin: 0,   sliderMax: 100 },
+            [segPref + '2']: { icon: 'moon',     iconEnd: 'blinds', iconPos: 'both', label: 'Blockout', sublabel: '100→0% Drop',  segmentMode: 'slider', sliderMin: 100, sliderMax: 0 },
+            zone_0: { icon: 'home_all', label: 'All' },
+            zone_1: { icon: 'sofa',     label: 'Living' },
+            zone_2: { icon: 'kitchen',  label: 'Kitchen' },
+            zone_3: { icon: 'bed',      label: 'Master' },
+            zone_4: { icon: 'desk',     label: 'Study' }
+          }
+        }
+      },
+      {
         id: 'strip_rooms_plus_devices',
         name: 'Room Rockers + 4-Device Segmented Bar (Fan/Blinds/AC/Audio)',
-        desc: 'Top touch strip becomes 4 multi-function device pads (Tap = Step 1-6, Hold = Toggle); bottom rockers use standardized Room Icons',
+        desc: 'Top touch strip becomes 4 multi-function device pads (Tap = Step 1-6, Hold = Toggle); bottom rockers use standardised Room Icons',
         touch_zones: {
           hue_ring: { enabled: topSurf === 'hue_ring', segments: 4, offset_deg: 0, zone_mask: 65535, labels: ['Fan','Blinds','AC','Audio'] },
           cct_bar:  { enabled: topSurf === 'cct_bar',  segments: 4, offset_deg: 0, zone_mask: 65535, labels: ['Fan','Blinds','AC','Audio'] },
@@ -1817,6 +2620,37 @@
     return m;
   }
 
+  function upsertCustomModel(cm) {
+    if (!cm || !cm.id) return null;
+    const bId = cm.base_model || cm.baseModel || 'B8';
+    const base = FACTORY_MODELS.find(f => f.id === bId) || FACTORY_MODELS[0];
+    const existingIdx = MODELS.findIndex(x => x.id === cm.id);
+    if (existingIdx !== -1) MODELS.splice(existingIdx, 1);
+    const entry = {
+      id: cm.id,
+      base: base.base || base.id,
+      baseModel: base.id,
+      finish: base.finish || 'white',
+      cat: 'custom',
+      baseCat: base.cat,
+      proto: base.proto,
+      zones: base.zones,
+      layout: base.layout,
+      kind: base.kind,
+      name: cm.name || `${base.id} Custom`,
+      sub: cm.is_draft ? `WIP Draft ${base.id} (${base.zones}Z)` : `Custom ${base.id} (${base.zones}Z)`,
+      readonly: false,
+      isCustom: true,
+      isDraft: Boolean(cm.is_draft),
+      stencilMode: cm.stencil_mode || 'full_panel',
+      facia: cm.facia || null,
+      touchZones: cm.touch_zones || null,
+      suggestedBindings: cm.suggested_bindings || null
+    };
+    MODELS.unshift(entry);
+    return entry;
+  }
+
   function registerCustomModels(rawList) {
     // Strip existing custom entries in-place while keeping MODELS array reference stable
     for (let i = MODELS.length - 1; i >= 0; i--) {
@@ -1874,10 +2708,53 @@
     return _baseRenderModelSvg(m, o);
   }
 
-  // Auto-hydrate custom models if loaded inside a browser pointing at Hub
-  if (typeof fetch === 'function' && typeof document !== 'undefined') {
-    const curScript = document.currentScript && document.currentScript.src ? new URL(document.currentScript.src, location.href).origin : '';
-    syncCustomModelsFromHub(curScript);
+  // Built-in Custom Showcase Remotes demonstrating Segmented Arc Sliders + Straight Bar Sliders
+  (function seedBuiltInShowcaseRemotes() {
+    const b8Presets = getSamplePresetsForModel('B8');
+    const b8Hybrid = b8Presets && b8Presets[0];
+    const b3Presets = getSamplePresetsForModel('B3');
+    const b3Dual = b3Presets && b3Presets[0];
+    const seeds = [];
+    if (b8Hybrid) {
+      seeds.push({
+        id: 'CUST_B8_SLIDER_SHOWCASE',
+        baseId: 'B8',
+        name: 'B8 Showcase: Arc + Bar Variable Sliders',
+        series: 'Custom Stencil Showcase',
+        protocol: 'fut089',
+        zones: 8,
+        isCustom: true,
+        isBuiltInShowcase: true,
+        touchZones: b8Hybrid.touch_zones,
+        facia: b8Hybrid.facia
+      });
+    }
+    if (b3Dual) {
+      seeds.push({
+        id: 'CUST_B3_LINEAR_SHOWCASE',
+        baseId: 'B3',
+        name: 'B3 Showcase: Dual Straight Sliders (0–100% / 100–0%)',
+        series: 'Custom Stencil Showcase',
+        protocol: 'fut089',
+        zones: 4,
+        isCustom: true,
+        isBuiltInShowcase: true,
+        touchZones: b3Dual.touch_zones,
+        facia: b3Dual.facia
+      });
+    }
+    if (seeds.length && typeof registerCustomModels === 'function') {
+      registerCustomModels(seeds);
+    }
+  })();
+
+  // Auto-hydrate custom models only when served directly from the ESP32 Hub (skip HA :8123 / HB UI :8581)
+  if (typeof fetch === 'function' && typeof document !== 'undefined' && typeof location !== 'undefined') {
+    const isHaOrHbShell = location.port === '8123' || location.port === '8581' || /milight_remote_studio|custom_components|homebridge/i.test(location.pathname + (document.currentScript && document.currentScript.src || ''));
+    if (!isHaOrHbShell) {
+      const curScript = document.currentScript && document.currentScript.src ? new URL(document.currentScript.src, location.href).origin : '';
+      syncCustomModelsFromHub(curScript);
+    }
   }
 
   root.MiBoxerCatalog = {
@@ -1885,9 +2762,15 @@
     FACTORY_MODELS,
     FACIA_ICONS,
     FACIA_THEMES,
+    FACIA_FONTS,
     isCapacitiveFlatPanel,
+    isSingleStickOnStencilReady,
+    getStencilFitMode,
+    getCutStickerSheet,
+    renderCutStickerSheetSvg,
     resolveBaseModel,
     registerCustomModels,
+    upsertCustomModel,
     syncCustomModelsFromHub,
     resolveBaseHardwareId,
     areModelsPhysicallyCompatible,
@@ -1983,11 +2866,8 @@
     return false; // Default to clean Light Mode stylesheet
   }
 
-  function injectStudioStyles() {
-    if (document.getElementById('mlrs-shared-styles')) return;
-    const st = document.createElement('style');
-    st.id = 'mlrs-shared-styles';
-    st.textContent = `
+  function injectStudioStyles(contextEl) {
+    const cssText = `
       .mbx-hit, .mbx-seg-hit { transition: filter 0.12s ease, stroke-width 0.12s ease; touch-action: none; }
       .mbx-hit.zone-active { stroke: #ea580c !important; stroke-width: 2.2px !important; }
       .mbx-hit.fire-rf, .mbx-seg-hit.fire-rf { stroke: #16a34a !important; stroke-width: 2.8px !important; filter: drop-shadow(0 0 6px rgba(22,163,74,0.75)); }
@@ -2013,11 +2893,69 @@
       }
       .mlrs-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: var(--mlrs-bg); border-bottom: 1px solid var(--mlrs-border); }
       .mlrs-preset-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 9px 20px; background: var(--mlrs-muted); border-bottom: 1px solid var(--mlrs-border); font-size: 12px; }
-      .mlrs-body { display: grid; grid-template-columns: minmax(300px, 360px) 1fr minmax(320px, 400px); flex: 1; min-height: 0; overflow: hidden; }
+      .mlrs-body { display: grid; grid-template-columns: minmax(290px, 355px) minmax(0, 1fr) minmax(315px, 405px); flex: 1; min-height: 0; overflow: hidden; }
+      .mlrs-modal *, .mlrs-modal *::before, .mlrs-modal *::after { box-sizing: border-box; }
       @media (max-width: 1040px) { .mlrs-body { grid-template-columns: 1fr; overflow-y: auto; } }
-      .mlrs-col { padding: 14px 16px; overflow-y: auto; border-right: 1px solid var(--mlrs-border); background: var(--mlrs-bg); }
+      .mlrs-col { padding: 14px 16px; overflow-y: auto; overflow-x: hidden; min-width: 0; border-right: 1px solid var(--mlrs-border); background: var(--mlrs-bg); }
       .mlrs-col:last-child { border-right: none; border-left: 1px solid var(--mlrs-border); }
       .mlrs-stage-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--mlrs-muted); padding: 16px; overflow: auto; }
+      
+      @keyframes mlrsSpotPulse {
+        0%, 100% { box-shadow: 0 0 0 2px #f59e0b, 0 0 14px rgba(245, 158, 11, 0.45); }
+        50%      { box-shadow: 0 0 0 3.5px #0ea5e9, 0 0 22px rgba(14, 165, 233, 0.55); }
+      }
+      .mlrs-tour-focus {
+        border-radius: 8px !important;
+        animation: mlrsSpotPulse 1.8s ease-in-out infinite !important;
+        position: relative;
+        z-index: 5;
+      }
+      .mlrs-tour-done-badge {
+        display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+        border-radius: 999px; font-size: 11px; font-weight: 700;
+        background: #dcfce7; color: #166534; border: 1px solid #86efac;
+      }
+      .mlrs-tour-pending-badge {
+        display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+        border-radius: 999px; font-size: 11px; font-weight: 700;
+        background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;
+      }
+      .mlrs-stage-wrap.mlrs-night-room {
+        background: radial-gradient(circle at 50% 42%, #0f172a 0%, #030712 78%) !important;
+      }
+      .mlrs-stage-wrap.mlrs-night-room .mlrs-stage-card {
+        background: #060a13 !important;
+        border-color: rgba(110, 231, 183, 0.35) !important;
+        box-shadow: 0 0 38px rgba(16, 185, 129, 0.18), inset 0 0 18px rgba(16, 185, 129, 0.06) !important;
+      }
+      .mlrs-launcher-card {
+        background: #ffffff !important; border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important; padding: 9px 12px !important; margin: 0 0 10px 0 !important;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important; color: #0f172a !important;
+      }
+      .mlrs-launcher-grid {
+        display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 7px !important; margin-top: 7px !important;
+      }
+      @media (max-width: 960px) { .mlrs-launcher-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+      button.mlrs-wf-item, .mlrs-wf-item {
+        display: flex !important; align-items: center !important; gap: 9px !important; text-align: left !important;
+        background: #f8fafc !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important; padding: 7px 10px !important; cursor: pointer !important;
+        font-weight: 500 !important; box-shadow: none !important; width: 100% !important;
+        transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease !important;
+      }
+      button.mlrs-wf-item:hover, .mlrs-wf-item:hover {
+        border-color: #0284c7 !important; background: #f0f9ff !important; filter: none !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12) !important; transform: translateY(-1px) !important;
+      }
+      .mlrs-wf-ico {
+        font-size: 15px !important; line-height: 1 !important; width: 28px !important; height: 28px !important; border-radius: 7px !important;
+        background: #e0f2fe !important; border: 1px solid #bae6fd !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;
+      }
+      .mlrs-lum-swatch {
+        display: inline-block; width: 11px; height: 11px; border-radius: 50%;
+        background: #6ee7b7; box-shadow: 0 0 8px #34d399, 0 0 14px #10b981;
+      }
       .mlrs-stage-card { background: var(--mlrs-bg); border: 1px solid var(--mlrs-border); border-radius: 12px; padding: 20px 28px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
       .mlrs-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 20px; background: var(--mlrs-bg); border-top: 1px solid var(--mlrs-border); }
       .mlrs-btn { background: var(--mlrs-bg); color: var(--mlrs-fg); border: 1px solid var(--mlrs-border); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -2027,7 +2965,7 @@
       .mlrs-sec-title { font-size: 12.5px; font-weight: 700; color: var(--mlrs-fg); margin-bottom: 10px; }
       .mlrs-field { margin-bottom: 10px; }
       .mlrs-field label { display: block; font-size: 11.5px; font-weight: 600; color: var(--mlrs-fg); margin-bottom: 4px; }
-      .mlrs-input, .mlrs-select { width: 100%; background: var(--mlrs-input-bg); border: 1px solid var(--mlrs-border); color: var(--mlrs-fg); border-radius: 6px; padding: 6px 9px; font-size: 12.5px; }
+      .mlrs-input, .mlrs-select { width: 100%; max-width: 100%; box-sizing: border-box; background: var(--mlrs-input-bg); border: 1px solid var(--mlrs-border); color: var(--mlrs-fg); border-radius: 6px; padding: 6px 9px; font-size: 12.5px; }
       .mlrs-swatch { height: 32px; padding: 2px 4px; cursor: pointer; }
       .mlrs-icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
       .mlrs-icon-cell { aspect-ratio: 1; border: 1px solid var(--mlrs-border); border-radius: 6px; background: var(--mlrs-input-bg); color: var(--mlrs-fg); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 3px; }
@@ -2051,8 +2989,7 @@
       .mlrs-peel-under, .mlrs-peel-over { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center; }
       .mlrs-peel-over { position: relative; z-index: 2; transition: clip-path 0.24s cubic-bezier(.22,.9,.3,1), filter 0.2s ease; filter: drop-shadow(-3px 5px 8px rgba(15,23,42,0.28)); }
       .mlrs-peel-stack.scrubbing .mlrs-peel-over, .mlrs-peel-stack.scrubbing .mlrs-peel-flap { transition: none !important; }
-      .mlrs-peel-corner-hit { position: absolute; top: 2px; right: 2px; width: 42px; height: 42px; z-index: 5; cursor: pointer; border-radius: 0 10px 0 28px; background: linear-gradient(225deg, rgba(148,163,184,0.38) 0%, rgba(255,255,255,0.88) 48%, rgba(15,23,42,0.16) 52%, transparent 56%); box-shadow: -2px 2px 5px rgba(15,23,42,0.18); title: "Click to peel back stencil"; }
-      .mlrs-peel-corner-hit:hover { transform: scale(1.08); }
+      .mlrs-peel-corner-hit { position: absolute; top: 2px; right: 2px; width: 42px; height: 42px; z-index: 5; cursor: pointer; border-radius: 0 10px 0 28px; background: linear-gradient(225deg, rgba(148,163,184,0.38) 0%, rgba(255,255,255,0.88) 48%, rgba(15,23,42,0.16) 52%, transparent 56%); box-shadow: -2px 2px 5px rgba(15,23,42,0.18); }
       .mlrs-peel-flap { position: absolute; inset: 6px; z-index: 4; pointer-events: none; background: linear-gradient(225deg, rgba(241,245,249,0.97) 0%, rgba(203,213,225,0.94) 55%, rgba(148,163,184,0.88) 100%); filter: drop-shadow(-6px 7px 10px rgba(15,23,42,0.34)); transition: clip-path 0.24s cubic-bezier(.22,.9,.3,1), opacity 0.2s ease; }
 
 
@@ -2065,20 +3002,31 @@
         margin: 0 0 10px 0 !important; font-size: 12.5px !important; line-height: 1.4 !important; box-sizing: border-box !important;
       }
       .mlrs-tour-left { display: flex !important; align-items: center !important; gap: 11px !important; flex: 1 !important; min-width: 240px !important; }
-      .mlrs-tour-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; background: #0284c7 !important; color: #fff !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 16px !important; flex-shrink: 0 !important; box-shadow: 0 2px 6px rgba(2,132,199,0.3) !important; }
+      .mlrs-tour-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; background: #0284c7 !important; color: #fff !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 16px !important; flex-shrink: 0 !important; }
       .mlrs-tour-step-badge { display: inline-flex !important; align-items: center !important; padding: 2px 8px !important; border-radius: 999px !important; background: rgba(2,132,199,0.16) !important; color: #0284c7 !important; font-weight: 800 !important; font-size: 10.5px !important; text-transform: uppercase !important; letter-spacing: 0.04em !important; margin-right: 7px !important; }
       .mlrs-tour-dots { display: inline-flex !important; gap: 4px !important; align-items: center !important; margin-left: 8px !important; vertical-align: middle !important; }
       .mlrs-tour-dot { width: 6px !important; height: 6px !important; border-radius: 999px !important; background: rgba(100,116,139,0.35) !important; }
       .mlrs-tour-dot.on { width: 16px !important; background: #0284c7 !important; }
       .mlrs-tour-nav { display: flex !important; align-items: center !important; gap: 6px !important; flex-wrap: wrap !important; }
-      button.mlrs-tour-btn { padding: 5px 11px !important; border-radius: 7px !important; border: 1px solid rgba(100,116,139,0.38) !important; background: var(--card-background-color, #ffffff) !important; color: var(--primary-text-color, #0f172a) !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; line-height: 1.2 !important; }
-      button.mlrs-tour-btn:hover { border-color: #0284c7 !important; }
+      button.mlrs-tour-btn { padding: 5px 11px !important; border-radius: 7px !important; border: 1px solid rgba(100,116,139,0.38) !important; background: #ffffff !important; color: #0f172a !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; }
       button.mlrs-tour-btn.demo { background: #0284c7 !important; border-color: #0284c7 !important; color: #ffffff !important; }
       button.mlrs-tour-reopen { display: inline-flex !important; align-items: center !important; gap: 6px !important; padding: 5px 12px !important; border-radius: 999px !important; border: 1px solid rgba(2,132,199,0.45) !important; background: rgba(2,132,199,0.10) !important; color: #0284c7 !important; font-weight: 700 !important; font-size: 11.5px !important; cursor: pointer !important; }
 
       .mlrs-box-sub { padding: 9px 10px; border-radius: 8px; background: var(--mlrs-muted); border: 1px solid var(--mlrs-border); margin-bottom: 10px; }
     `;
-    document.head.appendChild(st);
+    if (document.head && !document.getElementById('mlrs-shared-styles')) {
+      const st = document.createElement('style');
+      st.id = 'mlrs-shared-styles';
+      st.textContent = cssText;
+      document.head.appendChild(st);
+    }
+    const rootNode = contextEl && typeof contextEl.getRootNode === 'function' ? contextEl.getRootNode() : null;
+    if (rootNode && rootNode !== document && typeof rootNode.querySelector === 'function' && !rootNode.querySelector('#mlrs-shared-styles')) {
+      const stShadow = document.createElement('style');
+      stShadow.id = 'mlrs-shared-styles';
+      stShadow.textContent = cssText;
+      rootNode.appendChild(stShadow);
+    }
   }
 
   // ============================================================================
@@ -2104,7 +3052,8 @@
       touchZones: tz,
       activeZone: activeZone,
       editorMode: editMode,
-      selectedPadKey: opts.selectedPadKey || null
+      selectedPadKey: opts.selectedPadKey || null,
+      luminousPreview: Boolean(opts.luminousPreview)
     });
 
     const svgEl = stageEl.querySelector('svg');
@@ -2113,14 +3062,12 @@
     const vbRatio = (vb[2] > 0 && vb[3] > 0) ? (vb[2] / vb[3]) : 0.71;
     svgEl.removeAttribute('width');
     svgEl.removeAttribute('height');
-    const targetH = opts.maxHeight || 'clamp(370px, 58vh, 640px)';
-    svgEl.style.height = targetH;
+    svgEl.style.height = opts.maxHeight || 'clamp(370px, 58vh, 640px)';
     svgEl.style.maxHeight = '100%';
     svgEl.style.width = 'auto';
     svgEl.style.maxWidth = '100%';
     svgEl.style.aspectRatio = `${vb[2] || 220} / ${vb[3] || 310}`;
     if (vbRatio > 0.88) {
-      // Square / wide 86x86 or 142x86 wall panels: scale generously without towering over handhelds
       svgEl.style.height = opts.squareHeight || 'clamp(330px, 48vh, 520px)';
     }
     svgEl.style.display = 'block';
@@ -2228,7 +3175,7 @@
       const numVal = Number(rawVal);
       if (Number.isNaN(numVal)) return null;
 
-      // Wheel vs Bar check: if width & height are roughly square (>35x35), it's a Color Ring!
+      // Wheel vs Bar check: if width & height are roughly square (>35x35), it's a Colour Ring!
       if (normAct === 'hue' && bb.height > 32 && bb.width > 32 && Math.abs(bb.width - bb.height) < 20) {
         const cx = bb.x + bb.width / 2, cy = bb.y + bb.height / 2;
         const r = Math.max(bb.width, bb.height) * 0.42;
@@ -2379,6 +3326,33 @@
         const bb = el.getBBox ? el.getBBox() : null;
         const px = (sp && !Number.isNaN(sp.x) && sp.x !== 0) ? sp.x : (bb ? bb.x + bb.width / 2 : 0);
         const py = (sp && !Number.isNaN(sp.y) && sp.y !== 0) ? sp.y : (bb ? bb.y + bb.height / 2 : 0);
+        if (padCfg.segmentMode === 'slider') {
+          let frac = 0.5;
+          const sDegAttr = el.getAttribute('data-sdeg');
+          const eDegAttr = el.getAttribute('data-edeg');
+          if (sDegAttr !== null && eDegAttr !== null) {
+            const cxRing = Number(el.getAttribute('data-cx') || 0);
+            const cyRing = Number(el.getAttribute('data-cy') || 0);
+            const sDeg = Number(sDegAttr), eDeg = Number(eDegAttr);
+            // polarPt uses 0 deg = 12 o'clock clockwise: ang = atan2(dx, -dy)
+            let ang = Math.atan2(px - cxRing, -(py - cyRing)) * 180 / Math.PI;
+            while (ang < sDeg - 15) ang += 360;
+            while (ang > eDeg + 345) ang -= 360;
+            frac = Math.max(0, Math.min(1, (ang - sDeg) / Math.max(1, eDeg - sDeg)));
+          } else if (bb && bb.height > bb.width * 1.35) {
+            // Vertical bar segment: bottom = 0 (start), top = 1 (far/max)
+            frac = Math.max(0, Math.min(1, 1 - (py - bb.y) / Math.max(1, bb.height)));
+          } else {
+            frac = Math.max(0, Math.min(1, (px - (bb ? bb.x : 0)) / Math.max(1, bb ? bb.width : 1)));
+          }
+          const sMin = Number(padCfg.sliderMin ?? 0);
+          const sMax = Number(padCfg.sliderMax ?? 100);
+          const mappedVal = Math.round(sMin + frac * (sMax - sMin));
+          const badge = `${padCfg.label || pKey}: ${mappedVal}% (${sMin}%→${sMax}%)`;
+          showFingerPuck(px, py, `${mappedVal}%`, false, 'ui_btn');
+          if (typeof opts.onAction === 'function') opts.onAction(baseAct, mappedVal, zNext, badge);
+          return;
+        }
         if (mf) {
           const maxS = Math.max(2, Number(mf.steps || 4));
           const st = stepCounters[pKey] || { step: 0, on: true };
@@ -2462,9 +3436,69 @@
   // ============================================================================
   // 2. 1:1 PRINT / CUT STENCIL SHEET BUILDER
   // ============================================================================
+  function buildPodOrderPayload(remoteName, hexId, model, facia, touchZones, activeZone) {
+    const Cat = root.MiBoxerCatalog;
+    const dims = Cat.getPhysicalDims(model);
+    const f = facia || {};
+    const preset = (Cat.FACIA_THEMES && Cat.FACIA_THEMES[f.theme]) || {};
+    const pads = f.pads || {};
+    const lum = Object.assign({ enabled: false, border: false, header: false, slots: false }, f.luminous || {});
+    const luminousSlots = Object.entries(pads)
+      .filter(([, cfg]) => Boolean(cfg && cfg.luminous))
+      .map(([slotKey]) => slotKey);
+    const sliderSegments = Object.entries(pads)
+      .filter(([, cfg]) => Boolean(cfg && cfg.segmentMode === 'slider'))
+      .map(([slotKey, cfg]) => ({
+        slot: slotKey,
+        label: cfg.label || slotKey,
+        min_pct: Number(cfg.sliderMin ?? 0),
+        max_pct: Number(cfg.sliderMax ?? 100),
+        track_pitch_mm: Number(cfg.sliderPitch ?? f.sliderPitch ?? 2.2),
+        track_arrows: cfg.sliderArrows || f.sliderArrows || 'chevron'
+      }));
+
+    return {
+      schema: 'milight_remote_studio.pod_order.v1',
+      created_at: new Date().toISOString(),
+      remote_name: remoteName || model.name || model.id,
+      device_id: hexId || '',
+      hardware_model: model.id,
+      fit_mode: Cat.getStencilFitMode ? Cat.getStencilFitMode(model) : 'single_sheet',
+      dimensions_mm: {
+        width_mm: dims.width_mm,
+        height_mm: dims.height_mm,
+        corner_radius_mm: dims.corner_radius_mm || 0
+      },
+      appearance: {
+        theme: f.theme || 'pure_white',
+        material: f.material || 'matte_vinyl_peelable',
+        monochrome: Boolean(f.monochrome),
+        background_color: f.bgColor || (f.colors && f.colors.bg) || preset.bg || '#ffffff',
+        boundary_line_color: f.boundaryColor || (f.colors && f.colors.padStroke) || preset.padStroke || '#0f172a',
+        default_font: f.fontFamily || 'sans',
+        default_font_scale_pct: Number(f.fontScale || 100),
+        panel_title: f.panelTitle || '',
+        show_led_pinhole: f.showLedPinhole !== false,
+        background_image: (f.bgImage && f.bgImage.dataUrl) ? { fit: f.bgImage.fit || 'cover', scale_pct: Number(f.bgImage.scale ?? 100), offset_x_pct: Number(f.bgImage.x ?? 0), offset_y_pct: Number(f.bgImage.y ?? 0), opacity_pct: Number(f.bgImage.opacity ?? 88), pad_alpha_pct: Number(f.bgImage.padAlpha ?? 72), name: f.bgImage.name || 'custom_artwork', data_url: f.bgImage.dataUrl } : null
+      },
+      luminous_glow: {
+        enabled: Boolean(lum.enabled || luminousSlots.length > 0),
+        pigment: 'strontium_aluminate',
+        outer_boundary: Boolean(lum.enabled && lum.border),
+        header_title: Boolean(lum.enabled && lum.header),
+        all_slots: Boolean(lum.enabled && lum.slots),
+        individual_slots: luminousSlots
+      },
+      slider_segments: sliderSegments,
+      facia: f,
+      touch_zones: touchZones || null
+    };
+  }
+
   function buildOneToOnePrintSvg(model, facia, touchZones, activeZone) {
     const Cat = root.MiBoxerCatalog;
     const dims = Cat.getPhysicalDims(model);
+    const podMeta = buildPodOrderPayload(model.name || model.id, '', model, facia, touchZones, activeZone);
     const rendered = Cat.renderCapacitiveStencilSvg(model, {
       size: 'large', uid: 'print_1to1',
       facia: Object.assign({}, facia || {}, { enabled: true }),
@@ -2473,7 +3507,8 @@
     const vbMatch = rendered.match(/viewBox="([^"]+)"/);
     const vb = vbMatch ? vbMatch[1] : '0 0 210 210';
     const inner = rendered.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${dims.width_mm}mm" height="${dims.height_mm}mm" viewBox="${vb}" data-model="${model.id}">\n${inner}\n</svg>`;
+    const safeJson = JSON.stringify(podMeta).replace(/]]>/g, ']]&gt;');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${dims.width_mm}mm" height="${dims.height_mm}mm" viewBox="${vb}" data-model="${model.id}" data-bg-color="${podMeta.appearance.background_color}" data-boundary-color="${podMeta.appearance.boundary_line_color}" data-luminous="${podMeta.luminous_glow.enabled ? '1' : '0'}">\n<metadata><pod_order><![CDATA[${safeJson}]]></pod_order></metadata>\n${inner}\n</svg>`;
   }
 
   function openPrintSheetWindow(remoteName, hexId, model, facia, touchZones, activeZone) {
@@ -2520,6 +3555,79 @@
     return `CUST_${baseId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}_${clean || 'PANEL'}_${sfx}`;
   }
 
+  const WIP_STORAGE_KEY = 'mlrs_wip_drafts_v1';
+
+  function loadWipDrafts() {
+    try {
+      const raw = localStorage.getItem(WIP_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveWipDraftRecord(entry) {
+    const list = loadWipDrafts().filter(d => d && d.id !== entry.id);
+    list.unshift(entry);
+    while (list.length > 12) list.pop();
+    try {
+      localStorage.setItem(WIP_STORAGE_KEY, JSON.stringify(list));
+      return { ok: true, count: list.length };
+    } catch (e) {
+      // Quota fallback: keep latest 4 drafts
+      try {
+        localStorage.setItem(WIP_STORAGE_KEY, JSON.stringify(list.slice(0, 4)));
+        return { ok: true, count: Math.min(4, list.length) };
+      } catch (err2) {
+        return { ok: false, error: String(err2) };
+      }
+    }
+  }
+
+  function deleteWipDraftRecord(draftId) {
+    const list = loadWipDrafts().filter(d => d && d.id !== draftId);
+    try { localStorage.setItem(WIP_STORAGE_KEY, JSON.stringify(list)); } catch (_) {}
+    return list;
+  }
+
+  function compressImageFileToDataUrl(file, maxDim) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error('No file'));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read error'));
+      reader.onload = () => {
+        const rawUrl = String(reader.result || '');
+        if (/^data:image\/svg/i.test(rawUrl) && rawUrl.length < 350000) {
+          return resolve(rawUrl);
+        }
+        const img = new Image();
+        img.onerror = () => resolve(rawUrl);
+        img.onload = () => {
+          const cap = maxDim || 880;
+          let w = img.naturalWidth || img.width || 600;
+          let h = img.naturalHeight || img.height || 800;
+          if (w > cap || h > cap) {
+            const sc = cap / Math.max(w, h);
+            w = Math.max(1, Math.round(w * sc));
+            h = Math.max(1, Math.round(h * sc));
+          }
+          const cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          const ctx = cv.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          // Preserve alpha if PNG/WebP, otherwise compact high-quality JPEG
+          const outMime = /png|webp/i.test(file.type) ? 'image/webp' : 'image/jpeg';
+          let outUrl = cv.toDataURL(outMime, 0.84);
+          if (outUrl.length > 480000) outUrl = cv.toDataURL('image/jpeg', 0.74);
+          resolve(outUrl);
+        };
+        img.src = rawUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function openFaciaDesigner(opts) {
     injectStudioStyles();
     const Cat = root.MiBoxerCatalog;
@@ -2561,7 +3669,47 @@
     let iconTab = model.zones > 1 ? 'room' : 'device';
     let activeZone = 1;
     let selectedPadKey = tz.hue_ring.enabled ? 'hue_seg_1' : (bp.slots.find(s => s.key === 'zone_1') ? 'zone_1' : 'btn_on');
-    let lastTestReadout = 'Load a Showcase Preset above or click any stencil slot on the panel to customize.';
+    let luminousPreview = false;
+    let step1Confirmed = false;
+    let currentDraftId = opts.draftId || null;
+    let refreshTourState = null;
+    let lastTestReadout = 'Load a Showcase Template above or click any stencil slot on the panel to customise.';
+
+    if (opts.initialWorkflow === 'bare_walkthrough') {
+      tz = normalizeTouchZones(null);
+      draft.pads = {};
+      draft.panelTitle = '';
+      localStorage.setItem('mlrs_tour_stencil_build_path_v5_hide', '0');
+      localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '0');
+      lastTestReadout = `Guided Bare-Panel Build started on ${baseModel.id} \u2014 start with Step 1 highlighted above!`;
+    } else if (opts.initialWorkflow === 'template_edit' && presets && presets[0]) {
+      tz = normalizeTouchZones(JSON.parse(JSON.stringify(presets[0].touch_zones)));
+      Object.assign(draft, JSON.parse(JSON.stringify(presets[0].facia)));
+      selectedPadKey = Object.keys(draft.pads || {})[0] || selectedPadKey;
+      step1Confirmed = true;
+      localStorage.setItem('mlrs_tour_stencil_build_path_v5_hide', '0');
+      localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '2');
+      lastTestReadout = `Loaded "${presets[0].name}" \u2014 click any slot to customise its behaviour, text, icons & glow!`;
+    } else if (opts.initialWorkflow === 'export_pod') {
+      if ((!draft.pads || !Object.keys(draft.pads).length) && presets && presets[0]) {
+        tz = normalizeTouchZones(JSON.parse(JSON.stringify(presets[0].touch_zones)));
+        Object.assign(draft, JSON.parse(JSON.stringify(presets[0].facia)));
+      }
+      lastTestReadout = `Ready for Export \u2014 use Print 1:1 Stencil Sheet, Download 1:1 SVG, or Download POD Spec JSON at the bottom-right!`;
+        } else if (opts.initialWorkflow === 'resume_draft') {
+      const savedList = loadWipDrafts();
+      const pick = (opts.draftId && savedList.find(d => d.id === opts.draftId)) || savedList.find(d => d.baseModelId === baseModel.id) || savedList[0];
+      if (pick) {
+        currentDraftId = pick.id;
+        customModelName = pick.name || customModelName;
+        tz = normalizeTouchZones(pick.touchZones);
+        Object.keys(draft).forEach(k => delete draft[k]);
+        Object.assign(draft, JSON.parse(JSON.stringify(pick.facia || { enabled: true, pads: {} })));
+        selectedPadKey = pick.selectedPadKey || selectedPadKey;
+        step1Confirmed = true;
+      }
+      lastTestReadout = currentDraftId ? `Resumed WIP Draft "${customModelName}" \u2014 continue editing or click Create Custom Remote when ready!` : 'No saved WIP drafts yet \u2014 click Save WIP Draft at the bottom anytime!';
+    }
     const stepState = {};
     let isFullscreen = false;
     const onFsChange = () => {
@@ -2590,6 +3738,13 @@
     }
 
     function renderModal() {
+      if (/^(hue|sat|bri|cct)_seg_/.test(selectedPadKey)) {
+        const pref = selectedPadKey.split('_')[0];
+        const surfKey = pref === 'hue' ? 'hue_ring' : (pref + '_bar');
+        if (!tz[surfKey] || !tz[surfKey].enabled) {
+          selectedPadKey = (bp.slots && bp.slots[0] && bp.slots[0].key) || 'zone_1';
+        }
+      }
       const presetTheme = Cat.FACIA_THEMES[draft.theme] || Cat.FACIA_THEMES.pure_white;
       const effColors = Object.assign({}, presetTheme, draft.colors || {});
       const curPad = draft.pads[selectedPadKey] || {};
@@ -2602,20 +3757,24 @@
           <div class="mlrs-topbar">
             <div>
               <div style="font-size:16px;font-weight:700">Capacitive Panel Facia &amp; Stencil Studio — ${remoteName} (${model.id})</div>
-              <div style="font-size:12px;color:var(--mlrs-muted-fg);margin-top:2px">${dims.width_mm} × ${dims.height_mm} mm Glass Stencil • Segment sliders into multi-function device pads &amp; standardized room icons</div>
+              <div style="font-size:12px;color:var(--mlrs-muted-fg);margin-top:2px">${dims.width_mm} × ${dims.height_mm} mm Glass Stencil • Segment sliders into multi-function device pads &amp; standardised room icons</div>
             </div>
             <div style="display:flex;gap:10px;align-items:center">
-              <div class="mlrs-pill-group">
+              <div class="mlrs-pill-group" id="mlrsTourStepModeBar">
                 <button type="button" class="mlrs-btn ${mode === 'edit' ? 'active-tab' : ''}" id="mlrsModeEdit">1. Design Stencil</button>
-                <button type="button" class="mlrs-btn ${mode === 'test' ? 'active-tab' : ''}" id="mlrsModeTest">2. Interactive Test (Tap / Hold)</button>
+                <button type="button" class="mlrs-btn ${mode === 'test' ? 'active-tab' : ''}" id="mlrsModeTest">2. Interactive Test (Tap / Scrub)</button>
               </div>
-              ${opts.onOpenGestures ? `<button type="button" class="mlrs-btn" id="mlrsOpenGestBtn" title="Configure Multi-Tap &amp; Segmented Touch Zones">🎛️ Gestures &amp; Segments</button>` : ''}
-              <button type="button" class="mlrs-btn ${isFullscreen ? 'active-tab' : ''}" id="mlrsFullBtn" title="Toggle Full Monitor Screen">${isFullscreen ? '❐ Exit Fullscreen' : '⤢ Fullscreen'}</button>
+              <button type="button" class="mlrs-btn ${luminousPreview ? 'active-tab' : ''}" id="mlrsLumPreviewBtn" title="Simulate a dark room at night to preview Strontium Aluminate glow-in-the-dark ink!">
+                <span class="mlrs-lum-swatch"></span> ${luminousPreview ? '☀️ Exit Dark Room' : '🌙 Dark-Room Glow'}
+              </button>
+              ${luminousPreview ? `<button type="button" class="mlrs-btn" id="mlrsTopGlowAllBtn" style="border-color:#10b981;color:#059669;font-weight:700" title="Turn on Luminous Glow for every button, ring &amp; slider at once">✨ Glow All</button>` : ''}
+              ${opts.onOpenGestures ? `<button type="button" class="mlrs-btn" id="mlrsOpenGestBtn">🎛️ Gestures &amp; Segments</button>` : ''}
+              <button type="button" class="mlrs-btn ${isFullscreen ? 'active-tab' : ''}" id="mlrsFullBtn">${isFullscreen ? '❐ Exit Fullscreen' : '⤢ Fullscreen'}</button>
               <button type="button" class="mlrs-btn" id="mlrsCloseBtn">✕ Close</button>
             </div>
           </div>
 
-          <div class="mlrs-preset-bar" style="justify-content:space-between">
+          <div class="mlrs-preset-bar" id="mlrsTourStepIdentity" style="justify-content:space-between">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="padding:3px 8px;border-radius:5px;background:var(--mlrs-bg);border:1px solid var(--mlrs-border);font-weight:700">
                 ${isEditingExistingCustom ? `Editing Custom Type: ${rawModel.id}` : `Base Hardware: ${baseModel.id} (Read-Only)`}
@@ -2625,7 +3784,19 @@
               ${opts.hexId ? `<label style="display:flex;align-items:center;gap:5px;margin-left:6px;cursor:pointer;font-weight:500"><input type="checkbox" id="mlrsBindNowChk" ${bindCurrentRemote ? 'checked' : ''}/> Assign to ${hexId} now</label>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-weight:600;color:var(--mlrs-muted-fg)">Starter Templates:</span>
+              ${(() => {
+                const allWips = loadWipDrafts();
+                const matchingWips = allWips.filter(d => !d.baseModelId || d.baseModelId === baseModel.id);
+                if (!matchingWips.length) return '';
+                return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(2,132,199,0.09);border:1px solid rgba(2,132,199,0.35);padding:2px 6px;border-radius:6px">
+                  <select class="mlrs-select" id="mlrsResumeWipSel" style="width:auto;max-width:205px;padding:2px 6px;font-size:11.5px;font-weight:600">
+                    <option value="">📂 WIP Drafts (${matchingWips.length})…</option>
+                    ${matchingWips.map(d => `<option value="${d.id}" ${currentDraftId === d.id ? 'selected' : ''}>📝 ${d.name} (${d.savedAtShort || 'saved'})</option>`).join('')}
+                  </select>
+                  ${currentDraftId ? `<button type="button" class="mlrs-btn danger-outline" id="mlrsDelWipBtn" style="padding:2px 6px;font-size:11px" title="Delete this WIP draft">✕</button>` : ''}
+                </span>`;
+              })()}
+              <button type="button" class="mlrs-btn" id="mlrsResetBareBtn" title="Reset to a bare factory panel so you can build from scratch">🧼 Bare Panel</button><span style="font-weight:600;color:var(--mlrs-muted-fg)">Templates:</span>
               ${presets.map((pr, idx) => `<button type="button" class="mlrs-btn" data-preset-idx="${idx}" title="${pr.desc}">✨ ${pr.name.split(' (')[0]}</button>`).join('')}
             </div>
           </div>
@@ -2634,14 +3805,17 @@
           <div class="mlrs-body">
             <!-- LEFT: Touch Bar/Ring Segmentation + Surface Theme -->
             <div class="mlrs-col">
-              ${panelSurfaces.length ? `
-                <div class="mlrs-sec-title">1. Segment Sliders / Ring Into Buttons</div>
+              <div id="mlrsTourStepSplit">${panelSurfaces.length ? `
+                <div class="mlrs-sec-title">1. Segment Wheels &amp; Bars (Buttons or Sliders)</div>
+                <div style="background:var(--mlrs-muted);border:1px solid var(--mlrs-border);border-left:3px solid var(--mlrs-primary);border-radius:6px;padding:7px 9px;margin-bottom:9px;font-size:11px;line-height:1.42;color:var(--mlrs-fg)">
+                  <b>💡 Segmented Slider Pro-Tips:</b> Any slice on a <b>360° Ring</b> or <b>Straight Bar</b> can act independently as a <b>Tap/Hold Button</b> <i>or</i> a <b>Variable Slider</b> with custom <b>X% → Y%</b> endpoints (e.g. <code>15–80%</code> night-safe dimmer, <code>100–0%</code> inverted blind drop, or two half-bars for Sheer &amp; Blockout).
+                </div>
                 <div class="mlrs-box-sub">
                   ${panelSurfaces.map(ps => {
                     const sc = tz[ps.surf];
                     const maxS = ps.surf === 'hue_ring' ? 8 : 5;
                     const minS = ps.surf === 'hue_ring' ? 3 : 2;
-                    const friendly = ps.surf === 'hue_ring' ? (ps.type === 'ring' ? 'Color Ring' : 'Top Color Strip') : ps.surf === 'cct_bar' ? 'CCT Strip' : ps.surf === 'sat_bar' ? 'Left Touch Bar' : 'Dimmer Bar';
+                    const friendly = ps.surf === 'hue_ring' ? (ps.type === 'ring' ? 'Colour Ring' : 'Top Colour Strip') : ps.surf === 'cct_bar' ? 'CCT Strip' : ps.surf === 'sat_bar' ? 'Left Touch Bar' : 'Dimmer Bar';
                     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;font-size:12px">
                       <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-weight:600">
                         <input type="checkbox" data-seg-toggle="${ps.surf}" ${sc.enabled ? 'checked' : ''}/> ${friendly}
@@ -2653,9 +3827,9 @@
                   }).join('')}
                   <div style="font-size:11px;color:var(--mlrs-muted-fg);margin-top:4px">Enabled bars split into individual icon buttons on both the stencil &amp; ESP32 Hub!</div>
                 </div>
-              ` : ''}
+              ` : ''}</div>
 
-              <div class="mlrs-sec-title">2. Surface Theme &amp; Print Palette</div>
+              <div class="mlrs-sec-title" style="margin-top:14px">2. Surface Theme &amp; Print Palette</div>
               <div class="mlrs-field">
                 <label>Theme Preset</label>
                 <select class="mlrs-select" id="mlrsThemeSel">
@@ -2676,9 +3850,96 @@
                   <option value="minimal" ${draft.defaultPadStyle === 'minimal' ? 'selected' : ''}>Frameless Icon + Label</option>
                 </select>
               </div>
+              <div class="mlrs-field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <label>Background Colour</label>
+                  <input type="color" class="mlrs-input" id="mlrsBgColor" style="height:32px;padding:2px" value="${draft.bgColor || '#111827'}"/>
+                </div>
+                <div>
+                  <label>Boundary Line Colour</label>
+                  <input type="color" class="mlrs-input" id="mlrsBoundaryColor" style="height:32px;padding:2px" value="${draft.boundaryColor || '#94a3b8'}"/>
+                </div>
+              </div>
+              <div class="mlrs-box-sub" style="margin-bottom:10px;border-left:3px solid #0284c7">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px">
+                  <label style="font-size:12px;font-weight:700;margin:0">🖼️ Custom Background Graphic</label>
+                  <div style="display:flex;gap:4px">
+                    <input type="file" id="mlrsBgImgFile" accept="image/*" style="display:none"/>
+                    <button type="button" class="mlrs-btn" id="mlrsBgImgPickBtn" style="padding:2px 8px;font-size:11px;font-weight:600">${(draft.bgImage && draft.bgImage.dataUrl) ? '🔄 Change' : '+ Upload Image'}</button>
+                    ${(draft.bgImage && draft.bgImage.dataUrl) ? `<button type="button" class="mlrs-btn danger-outline" id="mlrsBgImgClearBtn" style="padding:2px 6px;font-size:11px" title="Remove background graphic">✕</button>` : ''}
+                  </div>
+                </div>
+                ${(draft.bgImage && draft.bgImage.dataUrl) ? `
+                  <div style="font-size:10.5px;color:var(--mlrs-muted-fg);margin-bottom:6px">Artwork: <b>${(draft.bgImage.name || 'Custom Graphic').replace(/[<>&"]/g, '')}</b> — align button overlays onto your graphic:</div>
+                  <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:6px;margin-bottom:6px">
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600">Fit Mode</label>
+                      <select class="mlrs-select" id="mlrsBgImgFit" style="padding:3px 6px;font-size:11px">
+                        <option value="cover" ${(draft.bgImage.fit || 'cover') === 'cover' ? 'selected' : ''}>Cover (Fill Glass)</option>
+                        <option value="contain" ${draft.bgImage.fit === 'contain' ? 'selected' : ''}>Contain (Whole Image)</option>
+                        <option value="stretch" ${draft.bgImage.fit === 'stretch' ? 'selected' : ''}>Stretch 1:1</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600">Zoom (${draft.bgImage.scale ?? 100}%)</label>
+                      <input type="range" min="40" max="250" step="2" id="mlrsBgImgScale" value="${draft.bgImage.scale ?? 100}" style="width:100%;accent-color:#0284c7"/>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600">Pan X (${draft.bgImage.x ?? 0}%)</label>
+                      <input type="range" min="-60" max="60" step="1" id="mlrsBgImgX" value="${draft.bgImage.x ?? 0}" style="width:100%;accent-color:#0284c7"/>
+                    </div>
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600">Pan Y (${draft.bgImage.y ?? 0}%)</label>
+                      <input type="range" min="-60" max="60" step="1" id="mlrsBgImgY" value="${draft.bgImage.y ?? 0}" style="width:100%;accent-color:#0284c7"/>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600" title="Opacity of the background artwork">Image Opacity (${draft.bgImage.opacity ?? 88}%)</label>
+                      <input type="range" min="10" max="100" step="2" id="mlrsBgImgOp" value="${draft.bgImage.opacity ?? 88}" style="width:100%;accent-color:#0284c7"/>
+                    </div>
+                    <div>
+                      <label style="font-size:10.5px;font-weight:600" title="0% = transparent button outlines over photo; 100% = solid keycaps">Button Backing (${draft.bgImage.padAlpha ?? 72}%)</label>
+                      <input type="range" min="0" max="100" step="4" id="mlrsBgImgPadAlpha" value="${draft.bgImage.padAlpha ?? 72}" style="width:100%;accent-color:#0284c7"/>
+                    </div>
+                  </div>
+                ` : `<div style="font-size:10.5px;color:var(--mlrs-muted-fg);line-height:1.35">Upload any room photo, floorplan, wood/marble texture, or custom artwork and fit your translucent button overlays right onto it.</div>`}
+              </div>
               <div class="mlrs-field">
                 <label>Panel Header Title</label>
                 <input type="text" class="mlrs-input" id="mlrsPanelTitle" placeholder="e.g. MASTER SUITE" value="${draft.panelTitle || ''}"/>
+              </div>
+              <div class="mlrs-field" style="display:grid;grid-template-columns:1.35fr 0.85fr;gap:8px">
+                <div>
+                  <label>Default Stencil Font</label>
+                  <select class="mlrs-select" id="mlrsPanelFont">
+                    ${Object.entries(Cat.FACIA_FONTS || { sans: { name: 'Clean Sans' } }).map(([fk, fv]) => `<option value="${fk}" ${(draft.fontFamily || 'sans') === fk ? 'selected' : ''}>${fv.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label>Font Size (%)</label>
+                  <input type="number" min="65" max="145" step="5" class="mlrs-input" id="mlrsPanelFontScale" value="${draft.fontScale || 100}"/>
+                </div>
+              </div>
+              <div class="mlrs-box-sub" id="mlrsTourStepLuminous" style="margin-bottom:8px;border-left:3px solid #10b981">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px">
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;margin:0">
+                    <input type="checkbox" id="mlrsLumMaster" ${(draft.luminous && draft.luminous.enabled) ? 'checked' : ''}/> <span class="mlrs-lum-swatch"></span> Luminous Glow Ink (POD)
+                  </label>
+                  <button type="button" class="mlrs-btn ${luminousPreview ? 'active-tab' : ''}" id="mlrsLumCardPreviewBtn" style="padding:2px 7px;font-size:10.5px">${luminousPreview ? '☀️ Day View' : '🌙 Test in Dark'}</button>
+                </div>
+                <div style="font-size:10.5px;color:var(--mlrs-muted-fg);margin-bottom:6px;line-height:1.35">Strontium Aluminate pigment looks subtle off-white by day and emits soft <b>aqua-green glow</b> in total darkness:</div>
+                <div style="display:flex;gap:5px;margin-bottom:6px">
+                  <button type="button" class="mlrs-btn" id="mlrsGlowAllBtn" style="flex:1;justify-content:center;padding:3px 6px;font-size:11px;border-color:#10b981;color:#059669;font-weight:700">✨ Glow Everything</button>
+                  <button type="button" class="mlrs-btn" id="mlrsGlowNoneBtn" style="padding:3px 8px;font-size:11px">✕ Clear Glow</button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px">
+                  <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="mlrsLumBorder" ${(draft.luminous && draft.luminous.border) ? 'checked' : ''}/> Outer Boundary</label>
+                  <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="mlrsLumHeader" ${(draft.luminous && draft.luminous.header) ? 'checked' : ''}/> Header / Title</label>
+                  <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="mlrsLumSlots" ${(draft.luminous && draft.luminous.slots) ? 'checked' : ''}/> All Buttons, Wheel &amp; Sliders</label>
+                </div>
               </div>
               <div class="mlrs-field" style="display:flex;flex-direction:column;gap:5px">
                 <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer"><input type="checkbox" id="mlrsMonoChk" ${draft.monochrome ? 'checked' : ''}/> Pure Monochrome / B&amp;W Ink</label>
@@ -2687,7 +3948,7 @@
             </div>
 
             <!-- CENTER: Accurate 1:1 Capacitive Stencil Canvas -->
-            <div class="mlrs-stage-wrap">
+            <div class="mlrs-stage-wrap ${luminousPreview ? 'mlrs-night-room' : ''}">
               <div style="margin-bottom:10px;font-size:12px;color:var(--mlrs-muted-fg);text-align:center">
                 ${mode === 'edit' ? '👆 <b>Design Mode:</b> Click any button, room rocker, or segmented wheel/bar slot to assign its icon &amp; function' : '🧪 <b>Interactive Test:</b> Short-tap multi-function pads to step (1→6), or <b>Hold 0.6s</b> to toggle ON/OFF!'}
               </div>
@@ -2699,49 +3960,160 @@
               </div>
             </div>
 
-            <!-- RIGHT: Selected Slot Inspector + Standardized Room & Device Icons -->
+            <!-- RIGHT: Selected Slot Inspector + Standardised Room & Device Icons -->
             <div class="mlrs-col">
               <div class="mlrs-sec-title" style="margin-bottom:6px">3. Selected Slot: <code style="padding:2px 6px;border-radius:4px;background:var(--mlrs-muted);border:1px solid var(--mlrs-border)">${selectedPadKey}</code></div>
+              ${(() => {
+                const surfMap = { hue_ring: 'hue_ring', hue: 'hue_ring', sat_bar: 'sat_bar', saturation: 'sat_bar', bri_bar: 'bri_bar', brightness: 'bri_bar', cct_bar: 'cct_bar', kelvin: 'cct_bar' };
+                const targetSurf = surfMap[selectedPadKey];
+                if (targetSurf && tz[targetSurf] && !tz[targetSurf].enabled) {
+                  return `<div class="mlrs-box-sub" style="margin-bottom:10px;border-left:3px solid var(--mlrs-primary)">
+                    <div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Continuous Touch Surface Selected</div>
+                    <div style="font-size:11px;color:var(--mlrs-muted-fg);margin-bottom:7px">Split this surface into 2–8 discrete buttons or custom <b>X% → Y% variable sliders</b>:</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      <button type="button" class="mlrs-btn primary" id="mlrsQuickSplitSlider" data-surf="${targetSurf}">⚡ Split as Variable Sliders</button>
+                      <button type="button" class="mlrs-btn" id="mlrsQuickSplitBtn" data-surf="${targetSurf}">Split as Tap/Hold Buttons</button>
+                    </div>
+                  </div>`;
+                }
+                return '';
+              })()}
 
-              <div class="mlrs-field">
-                <label>Slot Visibility / Style</label>
-                <select class="mlrs-select" id="mlrsPadStyle">
-                  <option value="" ${!curPad.style ? 'selected' : ''}>Use Panel Default (${draft.defaultPadStyle})</option>
-                  <option value="keycap" ${curPad.style === 'keycap' ? 'selected' : ''}>Filled Keycap</option>
-                  <option value="outline" ${curPad.style === 'outline' ? 'selected' : ''}>Crisp Outline</option>
-                  <option value="minimal" ${curPad.style === 'minimal' ? 'selected' : ''}>Icon + Label Only</option>
-                  <option value="blank" ${curPad.style === 'blank' ? 'selected' : ''}>Mask / Blank Unused Slot</option>
-                </select>
-              </div>
+              ${(() => {
+                const isSegSlot = /^(hue|bri|cct|sat)_seg_\d+$/.test(selectedPadKey);
+                const slotDef = bp.slots.find(sl => sl.key === selectedPadKey);
+                const isUnsplitBar = Boolean(slotDef && (slotDef.type === 'vbar' || slotDef.type === 'hbar') && (!slotDef.surf || !tz[slotDef.surf] || !tz[slotDef.surf].enabled));
+                const supportsSlider = isSegSlot || isUnsplitBar;
+                const effMode = isUnsplitBar
+                  ? (curPad.segmentMode || 'slider')
+                  : ((isSegSlot && curPad.segmentMode === 'slider') ? 'slider' : (curMf.enabled ? 'multistep' : 'button'));
+                return `
+                <div class="mlrs-box-sub" id="mlrsTourStepBehaviour" style="margin-bottom:10px">
+                  <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:6px">Slot Function &amp; Touch Behaviour</label>
+                  <div style="display:grid;grid-template-columns:${supportsSlider ? '1fr 1fr 1fr' : '1fr 1fr'};gap:5px;margin-bottom:7px">
+                    <button type="button" class="mlrs-btn ${effMode === 'button' ? 'active-tab' : ''}" style="justify-content:center;padding:5px 6px;font-size:11.5px" data-slot-mode="button">🔘 Tap / Toggle</button>
+                    <button type="button" class="mlrs-btn ${effMode === 'multistep' ? 'active-tab' : ''}" style="justify-content:center;padding:5px 6px;font-size:11.5px" data-slot-mode="multistep">🔢 Step Cycle</button>
+                    ${supportsSlider ? `<button type="button" class="mlrs-btn ${effMode === 'slider' ? 'active-tab' : ''}" style="justify-content:center;padding:5px 6px;font-size:11.5px" data-slot-mode="slider">🎚️ ${isUnsplitBar ? 'Slider &amp; Arrows' : 'X–Y% Slider'}</button>` : ''}
+                  </div>
+                  ${effMode === 'button' ? `
+                    <div style="font-size:11px;color:var(--mlrs-muted-fg);line-height:1.38">Standard button pad (<b>1× Tap</b>, <b>2× Double</b>, <b>Hold</b>). Save stencil below to bind any HA/Homebridge entity in the Visual Mapper.</div>
+                  ` : ''}
+                  ${effMode === 'multistep' ? `
+                    <div style="font-size:11px;color:var(--mlrs-muted-fg);margin-bottom:6px">Short tap steps <b>1 → N</b> (e.g. Fan Speed / Blind Pos); <b>Long Hold</b> toggles OFF.</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                      <div><label style="font-size:11px">Cycle Steps (2–8)</label><input type="number" min="2" max="8" class="mlrs-input" id="mlrsMfSteps" value="${curMf.steps || 5}"/></div>
+                      <div><label style="font-size:11px">Step Unit</label><input type="text" class="mlrs-input" id="mlrsMfUnit" placeholder="Spd / Pos / Temp" value="${curMf.unit || 'Spd'}"/></div>
+                    </div>
+                  ` : ''}
+                  ${effMode === 'slider' ? `
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px">
+                      <div>
+                        <label style="font-size:11px">Left / Start End (%)</label>
+                        <input type="number" min="0" max="100" class="mlrs-input" id="mlrsSegMin" value="${curPad.sliderMin ?? 0}"/>
+                      </div>
+                      <div>
+                        <label style="font-size:11px">Right / Far End (%)</label>
+                        <input type="number" min="0" max="100" class="mlrs-input" id="mlrsSegMax" value="${curPad.sliderMax ?? 100}"/>
+                      </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:0.88fr 1.12fr;gap:8px;margin-top:7px">
+                      <div>
+                        <label style="font-size:11px" title="0 = Solid line, 1.2 = Fine dots, 2.2 = Standard, 3.8 = Wide dash">Dot Pitch (mm)</label>
+                        <input type="number" min="0" max="8" step="0.2" class="mlrs-input" id="mlrsSegPitch" value="${curPad.sliderPitch ?? draft.sliderPitch ?? 2.2}"/>
+                      </div>
+                      <div>
+                        <label style="font-size:11px">Track End Arrows</label>
+                        <select class="mlrs-select" id="mlrsSegArrows">
+                          ${(() => {
+                            const ar = curPad.sliderArrows || draft.sliderArrows || 'chevron';
+                            return `
+                              <option value="chevron" ${ar === 'chevron' ? 'selected' : ''}>‹ ⋯⋯ › Open Chevrons</option>
+                              <option value="triangle" ${ar === 'triangle' ? 'selected' : ''}>◄ ⋯⋯ ► Solid Arrows</option>
+                              <option value="dots" ${ar === 'dots' ? 'selected' : ''}>• ⋯⋯ ● Min/Max Dots</option>
+                              <option value="ticks" ${ar === 'ticks' ? 'selected' : ''}>| ⋯⋯ | Scale End Ticks</option>
+                              <option value="none" ${ar === 'none' ? 'selected' : ''}>⋯⋯⋯ Dots Only (No Caps)</option>
+                              <option value="factory" ${ar === 'factory' ? 'selected' : ''}>🎨 Factory Gradient Bar</option>
+                            `;
+                          })()}
+                        </select>
+                      </div>
+                    </div>
+                    <div style="font-size:10.5px;color:var(--mlrs-muted-fg);margin-top:5px">Use <code>100 → 0</code> to invert (e.g. Blinds) or <code>15 → 85</code> to cap brightness.</div>
+                  ` : ''}
+                </div>`;
+              })()}
 
+              <div id="mlrsTourStepTypography">
               <div class="mlrs-field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                 <div>
-                  <label>Primary Label</label>
-                  <input type="text" class="mlrs-input" id="mlrsPadLabel" placeholder="e.g. Living, Fan" value="${curPad.label !== undefined ? curPad.label : ''}"/>
+                  <label>Main Label (Line 1)</label>
+                  <input type="text" class="mlrs-input" id="mlrsPadLabel" placeholder="e.g. Blinds, Living" value="${curPad.label !== undefined ? curPad.label : ''}"/>
                 </div>
                 <div>
-                  <label>Sub-Label / Hint</label>
-                  <input type="text" class="mlrs-input" id="mlrsPadSub" placeholder="Auto or custom" value="${curPad.sublabel !== undefined ? curPad.sublabel : ''}"/>
+                  <label>Sub-Label (Line 2)</label>
+                  <input type="text" class="mlrs-input" id="mlrsPadSub" placeholder="Auto (X→Y% / Hold) or custom" value="${curPad.sublabel !== undefined ? curPad.sublabel : ''}"/>
                 </div>
               </div>
 
-              <!-- Single-Button Multi-Function Showcase Config (Tap = Step 1..N, Hold = Toggle ON/OFF) -->
-              <div class="mlrs-box-sub">
-                <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px">
-                  <input type="checkbox" id="mlrsMfChk" ${curMf.enabled ? 'checked' : ''}/> Single-Button Multi-Function (Step + Hold)
+              <div class="mlrs-field" style="display:grid;grid-template-columns:1.2fr 0.95fr 0.65fr;gap:6px">
+                <div>
+                  <label title="Place icon beside text (Left/Right/Both Ends) so Main + Sub text stay centered!">Icon Placement</label>
+                  <select class="mlrs-select" id="mlrsPadIconPos">
+                    ${(() => {
+                      const isVBarSel = Boolean((bp.slots.find(sl => sl.key === selectedPadKey) || {}).type === 'vbar'); const defPos = isVBarSel ? 'both' : (/^hue_seg_/.test(selectedPadKey) ? 'left' : 'top');
+                      const pos = curPad.iconPos || defPos;
+                      return `
+                        <option value="left" ${pos === 'left' ? 'selected' : ''}>⬅️ Left of Text</option>
+                        <option value="right" ${pos === 'right' ? 'selected' : ''}>➡️ Right of Text</option>
+                        <option value="both" ${pos === 'both' ? 'selected' : ''}>↔️ Dual (Left &amp; Right Ends)</option>
+                        <option value="top" ${pos === 'top' ? 'selected' : ''}>⬆️ Above Text</option>
+                        <option value="bottom" ${pos === 'bottom' ? 'selected' : ''}>⬇️ Below Text</option>
+                        <option value="none" ${pos === 'none' ? 'selected' : ''}>🔤 Text Only (No Icon)</option>
+                      `;
+                    })()}
+                  </select>
+                </div>
+                <div>
+                  <label>Slot Font</label>
+                  <select class="mlrs-select" id="mlrsPadFont">
+                    <option value="" ${!curPad.fontFamily ? 'selected' : ''}>Panel Default</option>
+                    ${Object.entries(Cat.FACIA_FONTS || {}).map(([fk, fv]) => `<option value="${fk}" ${curPad.fontFamily === fk ? 'selected' : ''}>${fv.name.split(' (')[0]}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label>Size %</label>
+                  <input type="number" min="65" max="145" step="5" class="mlrs-input" id="mlrsPadFontScale" placeholder="${draft.fontScale || 100}" value="${curPad.fontScale || ''}"/>
+                </div>
+              </div>
+
+              ${((curPad.iconPos || ((bp.slots.find(sl => sl.key === selectedPadKey) || {}).type === 'vbar' ? 'both' : '')) === 'both') ? `
+              <div class="mlrs-field">
+                <label>Right / Far-End Secondary Icon (Dual Mode)</label>
+                <select class="mlrs-select" id="mlrsPadIconEnd">
+                  ${Object.entries(Cat.FACIA_ICONS || {}).map(([ik, iv]) => `<option value="${ik}" ${(curPad.iconEnd || curPad.icon || 'sun') === ik ? 'selected' : ''}>${iv.name || ik}</option>`).join('')}
+                </select>
+              </div>` : ''}
+              </div>
+
+              <div class="mlrs-field" style="display:grid;grid-template-columns:1.15fr 1fr;gap:8px;align-items:end">
+                <div>
+                  <label>Slot Visibility / Style</label>
+                  <select class="mlrs-select" id="mlrsPadStyle">
+                    <option value="" ${!curPad.style ? 'selected' : ''}>Use Panel Default (${draft.defaultPadStyle})</option>
+                    <option value="keycap" ${curPad.style === 'keycap' ? 'selected' : ''}>Filled Keycap</option>
+                    <option value="outline" ${curPad.style === 'outline' ? 'selected' : ''}>Crisp Outline</option>
+                    <option value="minimal" ${curPad.style === 'minimal' ? 'selected' : ''}>Icon + Label Only</option>
+                    <option value="blank" ${curPad.style === 'blank' ? 'selected' : ''}>Mask / Blank Unused Slot</option>
+                  </select>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;padding-bottom:7px">
+                  <input type="checkbox" id="mlrsPadLuminous" ${(curPad.luminous || (draft.luminous && draft.luminous.enabled && draft.luminous.slots)) ? 'checked' : ''}/> Glow Slot (POD)
                 </label>
-                <div style="font-size:11px;color:var(--mlrs-muted-fg);margin-bottom:6px">Short tap increments step (+1 cycle); long press toggles ON/OFF.</div>
-                ${curMf.enabled ? `
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-                    <div><label style="font-size:11px">Cycle Steps (2–8)</label><input type="number" min="2" max="8" class="mlrs-input" id="mlrsMfSteps" value="${curMf.steps || 6}"/></div>
-                    <div><label style="font-size:11px">Step Unit</label><input type="text" class="mlrs-input" id="mlrsMfUnit" placeholder="Spd / Pos / Temp" value="${curMf.unit || 'Spd'}"/></div>
-                  </div>
-                ` : ''}
               </div>
 
               <div class="mlrs-field">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                  <label style="margin:0">Standardized Icons</label>
+                  <label style="margin:0">Standardised Icons</label>
                   <div class="mlrs-pill-group">
                     <button type="button" class="mlrs-btn ${iconTab === 'room' ? 'active-tab' : ''}" style="padding:3px 8px;font-size:11px" id="mlrsTabRoom">Rooms (12)</button>
                     <button type="button" class="mlrs-btn ${iconTab === 'device' ? 'active-tab' : ''}" style="padding:3px 8px;font-size:11px" id="mlrsTabDev">Devices (20)</button>
@@ -2758,14 +4130,16 @@
             </div>
           </div>
 
-          <div class="mlrs-footer">
+          <div class="mlrs-footer ${opts.initialWorkflow === 'export_pod' ? 'mlrs-tour-focus' : ''}">
             <div style="display:flex;gap:8px;align-items:center">
               ${isEditingExistingCustom ? `<button type="button" class="mlrs-btn danger-outline" id="mlrsDeleteCustomBtn">Delete Custom Remote (${rawModel.id})</button>` : `<span style="font-size:12px;color:var(--mlrs-muted-fg)">Factory ${baseModel.id} is read-only — saving creates a reusable Custom Remote type.</span>`}
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <button type="button" class="mlrs-btn" id="mlrsPrintBtn">Print 1:1 Stencil Sheet</button>
               <button type="button" class="mlrs-btn" id="mlrsDlSvgBtn">Download 1:1 SVG</button>
+              <button type="button" class="mlrs-btn" id="mlrsDlPodBtn">Download POD Spec JSON</button>
               ${isEditingExistingCustom ? `<button type="button" class="mlrs-btn" id="mlrsSaveCopyBtn">Save as New Copy</button>` : ''}
+              <button type="button" class="mlrs-btn" id="mlrsSaveWipBtn" style="border-color:#0284c7;color:#0284c7;font-weight:700" title="Save your work-in-progress draft so you can close and come back later without overwriting live remotes">📝 Save WIP Draft</button>
               <button type="button" class="mlrs-btn" id="mlrsCancelBtn">Cancel</button>
               <button type="button" class="mlrs-btn primary" id="mlrsDeployBtn">${isEditingExistingCustom ? 'Update Custom Remote' : '+ Create Custom Remote'}</button>
             </div>
@@ -2780,7 +4154,7 @@
           squareHeight: isFullscreen ? 'min(70vh, 720px)' : 'min(56vh, 500px)',
           facia: draft, touchZones: tz, calibration: cal, activeZone,
           editMode: mode === 'edit', selectedPadKey: mode === 'edit' ? selectedPadKey : null,
-          stepState,
+          luminousPreview, stepState,
           onSelectPad: (pk) => { selectedPadKey = pk; renderModal(); },
           onZoneChange: (z) => { activeZone = z; },
           onAction: (act, val, z, customMsg) => {
@@ -2790,6 +4164,9 @@
             if (typeof opts.onTestAction === 'function') opts.onTestAction(act, val, z);
           }
         });
+        const b = backdrop.querySelector('#mlrsTestBanner');
+        if (b) b.textContent = lastTestReadout;
+        if (typeof refreshTourState === 'function') refreshTourState();
       };
       refreshStageOnly();
 
@@ -2833,16 +4210,145 @@
       }
       const tourBox = backdrop.querySelector('#mlrsStudioTourMount');
       if (tourBox) {
-        mountShowcaseTour(tourBox, {
-          tourId: 'stencil_editor',
+        const hasSegSurfaces = panelSurfaces.length > 0;
+        const hasBothRingAndBar = panelSurfaces.some(p => p.type === 'ring') && panelSurfaces.some(p => p.type !== 'ring');
+        const surfFriendlyList = panelSurfaces.map(ps =>
+          ps.surf === 'hue_ring' ? (ps.type === 'ring' ? 'Colour Ring' : 'Top Colour Strip')
+          : ps.surf === 'cct_bar' ? 'CCT Strip'
+          : ps.surf === 'sat_bar' ? 'Left Touch Bar' : 'Dimmer Bar'
+        );
+        const primarySurfLabel = surfFriendlyList[0] || 'Button Pad';
+
+        const tourCtrl = mountShowcaseTour(tourBox, {
+          tourId: 'stencil_build_path_v5',
+          scopeEl: backdrop,
           steps: [
-            { title: 'Full-Viewport Canvas & Starter Templates', body: 'Click Fullscreen above for maximum design space, or load a Starter Template to auto-populate room icons & segmented wheel buttons.', actionLabel: 'Toggle Fullscreen', onAction: () => backdrop.querySelector('#mlrsFullBtn')?.click() },
-            { title: 'Split Rings & Sliders Into Discrete Buttons', body: 'Use Left Panel Section 1 to turn continuous Color Rings or Touch Bars into 2 to 8 labeled macro buttons.', actionLabel: 'Select Ring Slot #1', onAction: () => { selectedPadKey = 'hue_seg_1'; mode = 'edit'; renderModal(); } },
-            { title: 'Architectural Themes & Blank Pad Masking', body: 'Switch between Pure White, Warm Travertine, or Matte Black vinyl palettes and set unused buttons to Blank Masked.', actionLabel: 'Preview Warm Stone', onAction: () => { draft.theme = 'warm_stone'; draft.colors = null; renderModal(); } },
-            { title: 'Single-Button Step-Cycling + Hold Toggle', body: 'Enable Multi-Function on any pad so short taps cycle speeds/positions (1 to 6) while a long hold toggles OFF — test it live in Mode 2!', actionLabel: 'Switch to Interactive Test', onAction: () => { mode = 'test'; renderModal(); } },
-            { title: 'Calibrated 1:1 Millimeter Print & SVG Export', body: 'Print Sheet adds a 10 mm verification square, and Download 1:1 SVG uses a real HTTP attachment stream compatible with download managers.', actionLabel: 'Download 1:1 SVG', onAction: () => backdrop.querySelector('#mlrsDlSvgBtn')?.click() }
+            {
+              title: `Step 1 (${baseModel.id}) \u2014 Name Your Custom Stencil & Pick Starting Point`,
+              hintShort: 'Edit Custom Remote Name above or click Start Bare & Next',
+              targetSelector: '#mlrsTourStepIdentity',
+              isComplete: () => step1Confirmed,
+              body: `You are editing <b>${baseModel.id}</b> (${surfFriendlyList.length ? 'supports splitting: <b>' + surfFriendlyList.join(' + ') + '</b>' : 'discrete button pads'}). ` +
+                    (!hasBothRingAndBar ? `<i>Tip: Want to test <b>both</b> a 360\u00b0 Arc Slider and a Straight Bar Slider together? Close &amp; pick <b>B8</b> or <b>B0</b>, or <a href="#" id="mlrsSwitchToB8Link" style="color:var(--mlrs-primary);font-weight:700;text-decoration:underline">click here to switch this session to B8 Showcase</a>!</i> ` : '') +
+                    `Otherwise type a <b>Custom Remote Name</b> above (keep <b>Assign to ${hexId}</b> ticked) or click <b>\u2705 Start Bare &amp; Next \u25B6</b>.`,
+              actionLabel: '\u2705 Start Bare & Go to Step 2 \u25B6',
+              onAction: () => {
+                step1Confirmed = true;
+                tz = normalizeTouchZones(null);
+                draft.pads = {};
+                selectedPadKey = (bp.slots && bp.slots[0] && bp.slots[0].key) || 'zone_1';
+                localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '1');
+                renderModal();
+              }
+            },
+            {
+              title: hasSegSurfaces ? `Step 2 \u2014 Split ${baseModel.id}'s ${primarySurfLabel} Into Segments` : `Step 2 \u2014 Select a Button Pad on ${baseModel.id}`,
+              hintShort: hasSegSurfaces ? `Tick ${primarySurfLabel} in Section 1 (left)` : 'Click a button on the center remote',
+              targetSelector: hasSegSurfaces ? '#mlrsTourStepSplit' : '#mlrsCanvasStage',
+              isComplete: () => !hasSegSurfaces || Object.values(tz || {}).some(s => Boolean(s && s.enabled)),
+              body: hasSegSurfaces
+                ? `In the highlighted <b>1. Segment Wheels &amp; Bars</b> box on the left, tick <b>${surfFriendlyList.join('</b> or <b>')}</b> and choose how many segments (2\u20138) to create.`
+                : `<b>${baseModel.id}</b> uses dedicated buttons rather than continuous sliders \u2014 click any button pad on the center faceplate to configure it.`,
+              actionLabel: hasSegSurfaces ? `\u26A1 Split ${primarySurfLabel} & Next \u25B6` : 'Select Pad #1 & Next \u25B6',
+              onAction: () => {
+                if (hasSegSurfaces) {
+                  const sk = panelSurfaces[0].surf;
+                  tz[sk].enabled = true;
+                  tz[sk].segments = sk === 'hue_ring' ? 4 : 2;
+                  selectedPadKey = sk === 'hue_ring' ? 'hue_seg_1' : (sk.split('_')[0] + '_seg_1');
+                }
+                localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '2');
+                mode = 'edit';
+                renderModal();
+              }
+            },
+            {
+              title: 'Step 3 \u2014 Choose Tap/Toggle, Step-Cycle, or X\u2013Y% Variable Slider',
+              hintShort: 'Pick a mode pill + Dot Pitch / Arrows on the right',
+              targetSelector: '#mlrsTourStepBehaviour',
+              onEnter: () => {
+                const activeSurf = panelSurfaces.find(ps => tz[ps.surf] && tz[ps.surf].enabled);
+                if (activeSurf && !/^(hue|sat|bri|cct)_seg_/.test(selectedPadKey)) {
+                  const sk = activeSurf.surf;
+                  selectedPadKey = sk === 'hue_ring' ? 'hue_seg_1' : (sk.split('_')[0] + '_seg_1');
+                  renderModal();
+                }
+              },
+              isComplete: () => Object.values(draft.pads || {}).some(p => Boolean(p && (p.segmentMode === 'slider' || (p.multifunc && p.multifunc.enabled)))),
+              body: hasSegSurfaces
+                ? 'In the highlighted <b>Slot Function</b> card (right), click <b>\uD83C\uDF9A\uFE0F X\u2013Y% Slider</b> to set custom <b>Start/End %</b> (e.g. <code>100 \u2192 0</code>), <b>Dot Pitch (mm)</b>, and <b>Track End Arrows</b> \u2014 or pick <b>\uD83D\uDD22 Step Cycle</b>!'
+                : 'In the highlighted <b>Slot Function</b> card (right), click <b>\uD83D\uDD22 Step Cycle</b> (tap steps 1\u2192N, hold = OFF) or <b>\uD83D\uDD18 Tap / Toggle</b>.',
+              actionLabel: hasSegSurfaces ? '\uD83C\uDF9A\uFE0F Set 100\u21920% Slider & Next \u25B6' : '\uD83D\uDD22 Set 5-Step Cycle & Next \u25B6',
+              onAction: () => {
+                if (hasSegSurfaces) {
+                  if (!Object.values(tz).some(s => s && s.enabled)) {
+                    const sk = panelSurfaces[0].surf;
+                    tz[sk].enabled = true; tz[sk].segments = sk === 'hue_ring' ? 4 : 2;
+                    selectedPadKey = sk === 'hue_ring' ? 'hue_seg_1' : (sk.split('_')[0] + '_seg_1');
+                  }
+                  const p = ensurePad();
+                  p.segmentMode = 'slider'; p.sliderMin = 100; p.sliderMax = 0; p.sliderPitch = 2.2; p.sliderArrows = 'chevron';
+                } else {
+                  const p = ensurePad();
+                  p.multifunc = { enabled: true, steps: 5, unit: 'Spd' };
+                }
+                localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '3');
+                renderModal();
+              }
+            },
+            {
+              title: 'Step 4 \u2014 Set Main/Sub Text & Left / Right / Dual Icons',
+              hintShort: 'Type Main Label + pick Left, Right, or Dual Icons',
+              targetSelector: '#mlrsTourStepTypography',
+              isComplete: () => {
+                const p = draft.pads && draft.pads[selectedPadKey];
+                return Boolean(p && p.label && p.icon && p.icon !== 'none');
+              },
+              body: 'In the highlighted <b>Labels &amp; Icon Placement</b> section (right), enter <b>Main + Sub Labels</b> and place icons to the <b>Left</b>, <b>Right</b>, or <b>Dual (Left &amp; Right Ends)</b> so text stays centered.',
+              actionLabel: '\u2194\uFE0F Demo Dual Icons & Next \u25B6',
+              onAction: () => {
+                const p = ensurePad();
+                p.label = p.label || 'Blinds'; p.sublabel = p.sublabel || '100\u21920% Slide';
+                p.iconPos = 'both'; p.icon = 'blinds'; p.iconEnd = 'sun';
+                localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '4');
+                renderModal();
+              }
+            },
+            {
+              title: 'Step 5 \u2014 Preview Nighttime Luminous Ink & Scrub Live',
+              hintShort: 'Click Test in Dark or 2. Interactive Test',
+              targetSelector: '#mlrsTourStepLuminous',
+              isComplete: () => Boolean(luminousPreview || mode === 'test' || (draft.luminous && draft.luminous.enabled)),
+              body: 'Tick <b>Luminous Glow Ink</b> in the highlighted box and click <b>\uD83C\uDF19 Test in Dark</b> to see how Strontium Aluminate glows at night \u2014 and try <b>2. Interactive Test</b> at the top to scrub your slider live!',
+              actionLabel: '\uD83C\uDF19 Preview Night Glow & Next \u25B6',
+              onAction: () => {
+                luminousPreview = true;
+                draft.luminous = Object.assign({ enabled: true, border: true, header: true, slots: false }, draft.luminous || {}, { enabled: true, border: true });
+                localStorage.setItem('mlrs_tour_stencil_build_path_v5_idx', '5');
+                renderModal();
+              }
+            },
+            {
+              title: 'Step 6 \u2014 Save Stencil & Map Real HA / Homebridge Devices',
+              hintShort: 'Click Create / Update Custom Remote at bottom-right',
+              targetSelector: '#mlrsDeployBtn',
+              isComplete: () => false,
+              body: `Click the highlighted <b>${isEditingExistingCustom ? 'Update Custom Remote' : '+ Create Custom Remote'}</b> button at the bottom-right! That attaches this stencil to <b>${hexId}</b> and returns you to the Visual Mapper to bind lights, blinds, fans, or scenes.`,
+              actionLabel: '\uD83D\uDCBE Save & Return to Mapper',
+              onAction: () => backdrop.querySelector('#mlrsDeployBtn')?.click()
+            }
           ]
         });
+        const switchB8Link = backdrop.querySelector('#mlrsSwitchToB8Link');
+        if (switchB8Link) {
+          switchB8Link.onclick = (ev) => {
+            ev.preventDefault();
+            backdrop.remove();
+            const b8Mod = Cat.MODELS.find(m => m.id === 'CUST_B8_SLIDER_SHOWCASE') || Cat.MODELS.find(m => m.id === 'B8');
+            if (b8Mod) openFaciaDesigner(Object.assign({}, opts, { model: b8Mod, remoteName: 'B8 Hybrid Slider Showcase', bindRemoteByDefault: false }));
+          };
+        }
+        refreshTourState = tourCtrl ? tourCtrl.refresh : null;
       }
       backdrop.querySelector('#mlrsCancelBtn').onclick = () => backdrop.remove();
 
@@ -2854,10 +4360,32 @@
           tz = normalizeTouchZones(JSON.parse(JSON.stringify(pr.touch_zones)));
           Object.assign(draft, JSON.parse(JSON.stringify(pr.facia)));
           selectedPadKey = Object.keys(draft.pads || {})[0] || selectedPadKey;
-          lastTestReadout = `Loaded "${pr.name}" — switch to "2. Interactive Test" to try short-tap step cycling & long-hold toggle!`;
+          step1Confirmed = true;
+          lastTestReadout = `Loaded "${pr.name}" — inspect any slot or click 2. Interactive Test to scrub sliders live!`;
           renderModal();
         };
       });
+
+      const qsSlider = backdrop.querySelector('#mlrsQuickSplitSlider');
+      if (qsSlider) qsSlider.onclick = () => {
+        const sk = qsSlider.getAttribute('data-surf');
+        tz[sk].enabled = true;
+        tz[sk].segments = sk === 'hue_ring' ? 4 : 2;
+        const pref = sk === 'hue_ring' ? 'hue_seg_1' : sk === 'cct_bar' ? 'cct_seg_1' : sk === 'sat_bar' ? 'sat_seg_1' : 'bri_seg_1';
+        selectedPadKey = pref;
+        const p = ensurePad();
+        p.segmentMode = 'slider';
+        if (p.sliderMin === undefined) p.sliderMin = 0;
+        if (p.sliderMax === undefined) p.sliderMax = 100;
+        renderModal();
+      };
+      const qsBtn = backdrop.querySelector('#mlrsQuickSplitBtn');
+      if (qsBtn) qsBtn.onclick = () => {
+        const sk = qsBtn.getAttribute('data-surf');
+        tz[sk].enabled = true;
+        selectedPadKey = sk === 'hue_ring' ? 'hue_seg_1' : sk === 'cct_bar' ? 'cct_seg_1' : sk === 'sat_bar' ? 'sat_seg_1' : 'bri_seg_1';
+        renderModal();
+      };
 
       // Segmentation toggles & counts
       backdrop.querySelectorAll('[data-seg-toggle]').forEach(chk => {
@@ -2891,15 +4419,145 @@
       });
       backdrop.querySelector('#mlrsDefPadStyle').onchange = (e) => { draft.defaultPadStyle = e.target.value; renderModal(); };
       backdrop.querySelector('#mlrsPanelTitle').oninput = (e) => { draft.panelTitle = e.target.value; refreshStageOnly(); };
+      const bgColEl = backdrop.querySelector('#mlrsBgColor');
+      if (bgColEl) bgColEl.oninput = (e) => { draft.bgColor = e.target.value; refreshStageOnly(); };
+      const bdrColEl = backdrop.querySelector('#mlrsBoundaryColor');
+      if (bdrColEl) bdrColEl.oninput = (e) => { draft.boundaryColor = e.target.value; refreshStageOnly(); };
+      const ensureLum = () => { if (!draft.luminous) draft.luminous = { enabled: false, border: true, header: false, slots: false }; return draft.luminous; };
+      const lumMasterEl = backdrop.querySelector('#mlrsLumMaster');
+      if (lumMasterEl) lumMasterEl.onchange = (e) => { const l = ensureLum(); l.enabled = e.target.checked; if (e.target.checked && !l.border && !l.header && !l.slots) l.border = true; refreshStageOnly(); };
+      const lumBorderEl = backdrop.querySelector('#mlrsLumBorder');
+      if (lumBorderEl) lumBorderEl.onchange = (e) => { const l = ensureLum(); l.border = e.target.checked; if (e.target.checked) l.enabled = true; refreshStageOnly(); };
+      const lumHeaderEl = backdrop.querySelector('#mlrsLumHeader');
+      if (lumHeaderEl) lumHeaderEl.onchange = (e) => { const l = ensureLum(); l.header = e.target.checked; if (e.target.checked) l.enabled = true; refreshStageOnly(); };
+      const lumSlotsEl = backdrop.querySelector('#mlrsLumSlots');
+      if (lumSlotsEl) lumSlotsEl.onchange = (e) => { const l = ensureLum(); l.slots = e.target.checked; if (e.target.checked) l.enabled = true; renderModal(); };
+      const applyGlowAll = () => {
+        draft.luminous = { enabled: true, border: true, header: true, slots: true };
+        luminousPreview = true;
+        renderModal();
+      };
+      const glowAllBtn = backdrop.querySelector('#mlrsGlowAllBtn');
+      if (glowAllBtn) glowAllBtn.onclick = applyGlowAll;
+      const topGlowAllBtn = backdrop.querySelector('#mlrsTopGlowAllBtn');
+      if (topGlowAllBtn) topGlowAllBtn.onclick = applyGlowAll;
+      const glowNoneBtn = backdrop.querySelector('#mlrsGlowNoneBtn');
+      if (glowNoneBtn) glowNoneBtn.onclick = () => {
+        draft.luminous = { enabled: false, border: false, header: false, slots: false };
+        Object.values(draft.pads || {}).forEach(p => { if (p) delete p.luminous; });
+        renderModal();
+      };
+      const padLumEl = backdrop.querySelector('#mlrsPadLuminous');
+      if (padLumEl) padLumEl.onchange = (e) => { const p = ensurePad(); p.luminous = e.target.checked; refreshStageOnly(); };
       backdrop.querySelector('#mlrsMonoChk').onchange = (e) => { draft.monochrome = e.target.checked; renderModal(); };
       backdrop.querySelector('#mlrsLedHole').onchange = (e) => { draft.showLedPinhole = e.target.checked; refreshStageOnly(); };
 
       // Right Column Inspector
-      const ensurePad = () => { if (!draft.pads[selectedPadKey]) draft.pads[selectedPadKey] = {}; return draft.pads[selectedPadKey]; };
+      const ensurePad = () => {
+        if (!draft.pads[selectedPadKey]) draft.pads[selectedPadKey] = {};
+        const slDef = bp.slots.find(sl => sl.key === selectedPadKey);
+        if (slDef && (slDef.type === 'vbar' || slDef.type === 'hbar') && draft.pads[selectedPadKey].sliderArrows !== 'factory') {
+          draft.pads[selectedPadKey].customTrack = true;
+        }
+        return draft.pads[selectedPadKey];
+      };
       backdrop.querySelector('#mlrsPadStyle').onchange = (e) => { const p = ensurePad(); if (e.target.value) p.style = e.target.value; else delete p.style; renderModal(); };
+      const segModeEl = backdrop.querySelector('#mlrsSegMode');
+      if (segModeEl) segModeEl.onchange = (e) => {
+        const p = ensurePad();
+        p.segmentMode = e.target.value;
+        if (p.segmentMode === 'slider' && p.multifunc) p.multifunc.enabled = false;
+        renderModal();
+      };
+      const segMinEl = backdrop.querySelector('#mlrsSegMin');
+      if (segMinEl) segMinEl.oninput = (e) => {
+        const p = ensurePad();
+        p.sliderMin = Math.max(0, Math.min(100, Number(e.target.value || 0)));
+        refreshStageOnly();
+      };
+            const toggleNightPreview = () => {
+        luminousPreview = !luminousPreview;
+        if (luminousPreview && !(draft.luminous && (draft.luminous.enabled || Object.values(draft.pads || {}).some(p => p && p.luminous)))) {
+          draft.luminous = Object.assign({ enabled: true, border: true, header: true, slots: false }, draft.luminous || {}, { enabled: true, border: true });
+        }
+        renderModal();
+      };
+      const lumPrevBtn = backdrop.querySelector('#mlrsLumPreviewBtn');
+      if (lumPrevBtn) lumPrevBtn.onclick = toggleNightPreview;
+      const lumCardPrevBtn = backdrop.querySelector('#mlrsLumCardPreviewBtn');
+      if (lumCardPrevBtn) lumCardPrevBtn.onclick = toggleNightPreview;
+
+      const bareBtn = backdrop.querySelector('#mlrsResetBareBtn');
+      if (bareBtn) bareBtn.onclick = () => {
+        tz = normalizeTouchZones(null);
+        draft.pads = {};
+        draft.panelTitle = '';
+        draft.luminous = { enabled: false, border: false, header: false, slots: false };
+        luminousPreview = false;
+        selectedPadKey = (bp.slots && bp.slots[0] && bp.slots[0].key) || 'zone_1';
+        step1Confirmed = true;
+        lastTestReadout = `Reset to bare ${baseModel.id} panel — now click Next ▶ in the Guided Path to split a wheel or bar!`;
+        renderModal();
+      };
+
+      const segPitchEl = backdrop.querySelector('#mlrsSegPitch');
+      if (segPitchEl) segPitchEl.oninput = (e) => {
+        const p = ensurePad();
+        p.sliderPitch = Math.max(0, Math.min(8, Number(e.target.value ?? 2.2)));
+        refreshStageOnly();
+      };
+      const segArrowsEl = backdrop.querySelector('#mlrsSegArrows');
+      if (segArrowsEl) segArrowsEl.onchange = (e) => {
+        const p = ensurePad();
+        p.sliderArrows = e.target.value || 'chevron';
+        if (p.sliderArrows === 'factory') delete p.customTrack;
+        else p.customTrack = true;
+        refreshStageOnly();
+      };
+
+      const segMaxEl = backdrop.querySelector('#mlrsSegMax');
+      if (segMaxEl) segMaxEl.oninput = (e) => {
+        const p = ensurePad();
+        p.sliderMax = Math.max(0, Math.min(100, Number(e.target.value || 100)));
+        refreshStageOnly();
+      };
+      const pFontEl = backdrop.querySelector('#mlrsPanelFont');
+      if (pFontEl) pFontEl.onchange = (e) => { draft.fontFamily = e.target.value || 'sans'; refreshStageOnly(); };
+      const pScaleEl = backdrop.querySelector('#mlrsPanelFontScale');
+      if (pScaleEl) pScaleEl.oninput = (e) => { draft.fontScale = Math.max(65, Math.min(145, Number(e.target.value || 100))); refreshStageOnly(); };
+
+            backdrop.querySelectorAll('[data-slot-mode]').forEach(b => {
+        b.onclick = () => {
+          const mVal = b.getAttribute('data-slot-mode');
+          const p = ensurePad();
+          if (mVal === 'slider') {
+            p.segmentMode = 'slider';
+            if (p.sliderMin === undefined) p.sliderMin = 0;
+            if (p.sliderMax === undefined) p.sliderMax = 100;
+            if (p.multifunc) p.multifunc.enabled = false;
+          } else if (mVal === 'multistep') {
+            p.segmentMode = 'button';
+            p.multifunc = Object.assign({ steps: 5, unit: 'Spd' }, p.multifunc || {}, { enabled: true });
+          } else {
+            p.segmentMode = 'button';
+            if (p.multifunc) p.multifunc.enabled = false;
+          }
+          renderModal();
+        };
+      });
+      const iconEndEl = backdrop.querySelector('#mlrsPadIconEnd');
+      if (iconEndEl) iconEndEl.onchange = (e) => { ensurePad().iconEnd = e.target.value || 'none'; refreshStageOnly(); };
+
+      const iconPosEl = backdrop.querySelector('#mlrsPadIconPos');
+      if (iconPosEl) iconPosEl.onchange = (e) => { ensurePad().iconPos = e.target.value || 'left'; renderModal(); };
+      const padFontEl = backdrop.querySelector('#mlrsPadFont');
+      if (padFontEl) padFontEl.onchange = (e) => { const p = ensurePad(); if (e.target.value) p.fontFamily = e.target.value; else delete p.fontFamily; refreshStageOnly(); };
+      const padScaleEl = backdrop.querySelector('#mlrsPadFontScale');
+      if (padScaleEl) padScaleEl.oninput = (e) => { const p = ensurePad(); const v = Number(e.target.value); if (v >= 65 && v <= 145) p.fontScale = v; else delete p.fontScale; refreshStageOnly(); };
+
       backdrop.querySelector('#mlrsPadLabel').oninput = (e) => { const p = ensurePad(); p.label = e.target.value; syncLabelToTouchZone(selectedPadKey, e.target.value); refreshStageOnly(); };
       backdrop.querySelector('#mlrsPadSub').oninput = (e) => { const p = ensurePad(); p.sublabel = e.target.value; refreshStageOnly(); };
-      backdrop.querySelector('#mlrsMfChk').onchange = (e) => {
+      const mfChkLegacy = backdrop.querySelector('#mlrsMfChk'); if (mfChkLegacy) mfChkLegacy.onchange = (e) => {
         const p = ensurePad();
         p.multifunc = Object.assign({ steps: 6, unit: 'Spd' }, p.multifunc || {}, { enabled: e.target.checked });
         renderModal();
@@ -2936,9 +4594,124 @@
         const fName = `${model.id.toLowerCase()}_${hexId.toLowerCase()}_stencil_1to1.svg`;
         downloadTextFile(fName, svgStr, 'image/svg+xml', { hubBase });
       };
+      const podBtn = backdrop.querySelector('#mlrsDlPodBtn');
+      if (podBtn) podBtn.onclick = (ev) => {
+        if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+        const podObj = buildPodOrderPayload(remoteName, hexId, model, draft, tz, activeZone);
+        const fName = `${model.id.toLowerCase()}_${hexId.toLowerCase()}_pod_order.json`;
+        downloadTextFile(fName, JSON.stringify(podObj, null, 2), 'application/json', { hubBase });
+      };
+
+            // Background Graphic Upload, Fit, Zoom, Pan & Frosted Keycap Alpha handlers
+      const bgFileInp = backdrop.querySelector('#mlrsBgImgFile');
+      const bgPickBtn = backdrop.querySelector('#mlrsBgImgPickBtn');
+      if (bgPickBtn && bgFileInp) {
+        bgPickBtn.onclick = () => bgFileInp.click();
+        bgFileInp.onchange = async (ev) => {
+          const f = ev.target.files && ev.target.files[0];
+          if (!f) return;
+          bgPickBtn.textContent = '⏳ Loading…';
+          try {
+            const dUrl = await compressImageFileToDataUrl(f, 880);
+            draft.bgImage = Object.assign({ fit: 'cover', scale: 100, x: 0, y: 0, opacity: 88, padAlpha: 72 }, draft.bgImage || {}, {
+              dataUrl: dUrl,
+              name: f.name || 'custom_graphic'
+            });
+            lastTestReadout = `Loaded background graphic "${f.name}" — adjust Zoom, Pan & Button Backing opacity on the left!`;
+            renderModal();
+          } catch (err) {
+            bgPickBtn.textContent = '+ Upload Image';
+            alert('Could not load image: ' + err);
+          }
+        };
+      }
+      const bgClearBtn = backdrop.querySelector('#mlrsBgImgClearBtn');
+      if (bgClearBtn) bgClearBtn.onclick = () => { delete draft.bgImage; renderModal(); };
+      const bgFitEl = backdrop.querySelector('#mlrsBgImgFit');
+      if (bgFitEl) bgFitEl.onchange = (e) => { if (draft.bgImage) { draft.bgImage.fit = e.target.value; refreshStageOnly(); } };
+      [['#mlrsBgImgScale', 'scale', 'Zoom'], ['#mlrsBgImgX', 'x', 'Pan X'], ['#mlrsBgImgY', 'y', 'Pan Y'], ['#mlrsBgImgOp', 'opacity', 'Image Opacity'], ['#mlrsBgImgPadAlpha', 'padAlpha', 'Button Backing']].forEach(([sel, prop, lblTxt]) => {
+        const el = backdrop.querySelector(sel);
+        if (el) el.oninput = (e) => {
+          if (!draft.bgImage) return;
+          draft.bgImage[prop] = Number(e.target.value);
+          const lbl = el.previousElementSibling;
+          if (lbl) lbl.textContent = `${lblTxt} (${draft.bgImage[prop]}%)`;
+          refreshStageOnly();
+        };
+      });
+
+      // Glow Everything / Clear Glow handlers (safe idempotent bind)
+      const glowAllB = backdrop.querySelector('#mlrsGlowAllBtn');
+      if (glowAllB && !glowAllB.onclick) glowAllB.onclick = () => { draft.luminous = { enabled: true, border: true, header: true, slots: true }; luminousPreview = true; renderModal(); };
+      const glowNoneB = backdrop.querySelector('#mlrsGlowNoneBtn');
+      if (glowNoneB && !glowNoneB.onclick) glowNoneB.onclick = () => { draft.luminous = { enabled: false, border: false, header: false, slots: false }; Object.values(draft.pads || {}).forEach(p => { if (p) delete p.luminous; }); renderModal(); };
+
+      // Save & Resume Work-in-Progress (WIP) Draft handlers
+      const saveWipBtn = backdrop.querySelector('#mlrsSaveWipBtn');
+      if (saveWipBtn) {
+        saveWipBtn.onclick = () => {
+          const cleanName = (customModelName || '').trim() || `${baseModel.id} Draft`;
+          const dId = currentDraftId || `WIP_${baseModel.id}_${Date.now().toString(36).toUpperCase()}`;
+          currentDraftId = dId;
+          const now = new Date();
+          const savedAtShort = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const res = saveWipDraftRecord({
+            id: dId,
+            name: cleanName,
+            baseModelId: baseModel.id,
+            hexId,
+            facia: JSON.parse(JSON.stringify(draft)),
+            touchZones: JSON.parse(JSON.stringify(tz)),
+            selectedPadKey,
+            savedAt: now.toISOString(),
+            savedAtShort
+          });
+          if (res.ok) {
+            lastTestReadout = `📝 Saved WIP Draft "${cleanName}" (${savedAtShort}) — safe to close and resume anytime from the top bar!`;
+            renderModal();
+            const freshBtn = backdrop.querySelector('#mlrsSaveWipBtn');
+            if (freshBtn) {
+              freshBtn.textContent = `✅ Draft Saved (${savedAtShort})!`;
+              freshBtn.style.background = '#059669';
+              freshBtn.style.color = '#ffffff';
+              freshBtn.style.borderColor = '#059669';
+              setTimeout(() => { if (freshBtn.isConnected) { freshBtn.textContent = '📝 Save WIP Draft'; freshBtn.style.background = ''; freshBtn.style.color = '#0284c7'; freshBtn.style.borderColor = '#0284c7'; } }, 2400);
+            }
+          } else {
+            alert('Could not save draft locally: ' + res.error);
+          }
+        };
+      }
+      const resumeWipSel = backdrop.querySelector('#mlrsResumeWipSel');
+      if (resumeWipSel) {
+        resumeWipSel.onchange = (e) => {
+          const pickId = e.target.value;
+          const found = loadWipDrafts().find(d => d.id === pickId);
+          if (!found) return;
+          currentDraftId = found.id;
+          customModelName = found.name || customModelName;
+          tz = normalizeTouchZones(found.touchZones);
+          Object.keys(draft).forEach(k => delete draft[k]);
+          Object.assign(draft, JSON.parse(JSON.stringify(found.facia || { enabled: true, pads: {} })));
+          selectedPadKey = found.selectedPadKey || selectedPadKey;
+          step1Confirmed = true;
+          lastTestReadout = `📂 Loaded WIP Draft "${found.name}" (${found.savedAtShort || 'saved'})!`;
+          renderModal();
+        };
+      }
+      const delWipBtn = backdrop.querySelector('#mlrsDelWipBtn');
+      if (delWipBtn) {
+        delWipBtn.onclick = () => {
+          if (!currentDraftId) return;
+          deleteWipDraftRecord(currentDraftId);
+          currentDraftId = null;
+          lastTestReadout = 'Removed saved WIP draft.';
+          renderModal();
+        };
+      }
 
       const nameInp = backdrop.querySelector('#mlrsCustomModelName');
-      if (nameInp) nameInp.oninput = (e) => { customModelName = e.target.value; };
+      if (nameInp) nameInp.oninput = (e) => { customModelName = e.target.value; step1Confirmed = Boolean(customModelName.trim().length >= 2); if (typeof refreshTourState === 'function') refreshTourState(); };
       const bindChk = backdrop.querySelector('#mlrsBindNowChk');
       if (bindChk) bindChk.onchange = (e) => { bindCurrentRemote = e.target.checked; };
 
@@ -2953,17 +4726,24 @@
           facia: draft,
           touch_zones: tz
         };
-        const res = await fetch(`${hubBase}/api/remotes/custom_models`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        await Cat.syncCustomModelsFromHub(hubBase);
         if (typeof opts.onSaveCustomModel === 'function') {
+          // Host integration (Home Assistant / Homebridge) handles persistence & Hub proxy!
+          if (hubBase) {
+            fetch(`${hubBase}/api/remotes/custom_models`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            }).then(() => Cat.syncCustomModelsFromHub(hubBase)).catch(() => {});
+          }
+          if (Cat.upsertCustomModel) Cat.upsertCustomModel(payload);
           await opts.onSaveCustomModel({ customModel: payload, bindNow: bindCurrentRemote, calibration: cal, touchZones: tz, facia: draft });
-        } else if (bindCurrentRemote && typeof opts.onSave === 'function') {
-          await opts.onSave(draft, cal, tz, targetId);
+        } else {
+          const res = await fetch(`${hubBase}/api/remotes/custom_models`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          await Cat.syncCustomModelsFromHub(hubBase);
+          if (bindCurrentRemote && typeof opts.onSave === 'function') {
+            await opts.onSave(draft, cal, tz, targetId);
+          }
         }
         backdrop.remove();
       };
@@ -3121,39 +4901,25 @@
 
   function computePeelClipPolygons(peelPct) {
     const p = Math.max(0, Math.min(100, Number(peelPct) || 0));
-    if (p <= 0.5) {
-      return { overClip: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', flapClip: 'polygon(100% 0%, 100% 0%, 100% 0%)', flapOpacity: 0 };
-    }
-    if (p >= 99.5) {
-      return { overClip: 'polygon(0% 100%, 0% 100%, 0% 100%)', flapClip: 'polygon(0% 0%, 0% 0%, 0% 0%)', flapOpacity: 0 };
-    }
-    // Diagonal peel from top-right (100%, 0%) toward bottom-left (0%, 100%)
-    const d = (p / 100) * 200; // 0..200
-    let pts = [];
+    if (p <= 0.5) return { overClip: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', flapClip: 'polygon(100% 0%, 100% 0%, 100% 0%)', flapOpacity: 0 };
+    if (p >= 99.5) return { overClip: 'polygon(0% 100%, 0% 100%, 0% 100%)', flapClip: 'polygon(0% 0%, 0% 0%, 0% 0%)', flapOpacity: 0 };
+    const d = (p / 100) * 200;
     if (d <= 100) {
-      const xCut = 100 - d;
-      const yCut = d;
-      pts = [`0% 0%`, `${xCut.toFixed(1)}% 0%`, `100% ${yCut.toFixed(1)}%`, `100% 100%`, `0% 100%`];
-      const fx = Math.max(0, xCut - d * 0.28);
-      const fy = Math.min(100, yCut + d * 0.28);
+      const xCut = 100 - d, yCut = d;
+      const fx = Math.max(0, xCut - d * 0.28), fy = Math.min(100, yCut + d * 0.28);
       return {
-        overClip: `polygon(${pts.join(', ')})`,
+        overClip: `polygon(0% 0%, ${xCut.toFixed(1)}% 0%, 100% ${yCut.toFixed(1)}%, 100% 100%, 0% 100%)`,
         flapClip: `polygon(${xCut.toFixed(1)}% 0%, 100% ${yCut.toFixed(1)}%, ${fx.toFixed(1)}% ${fy.toFixed(1)}%)`,
         flapOpacity: 0.92
       };
-    } else {
-      const rem = 200 - d; // 100..0
-      const xBot = rem;
-      const yLeft = 100 - rem;
-      pts = [`0% ${yLeft.toFixed(1)}%`, `${xBot.toFixed(1)}% 100%`, `0% 100%`];
-      const fx = Math.max(0, xBot * 0.55);
-      const fy = Math.min(100, yLeft + (100 - yLeft) * 0.45);
-      return {
-        overClip: `polygon(${pts.join(', ')})`,
-        flapClip: `polygon(0% ${yLeft.toFixed(1)}%, ${xBot.toFixed(1)}% 100%, ${fx.toFixed(1)}% ${fy.toFixed(1)}%)`,
-        flapOpacity: Math.max(0.18, rem / 110)
-      };
     }
+    const rem = 200 - d, xBot = rem, yLeft = 100 - rem;
+    const fx = Math.max(0, xBot * 0.55), fy = Math.min(100, yLeft + (100 - yLeft) * 0.45);
+    return {
+      overClip: `polygon(0% ${yLeft.toFixed(1)}%, ${xBot.toFixed(1)}% 100%, 0% 100%)`,
+      flapClip: `polygon(0% ${yLeft.toFixed(1)}%, ${xBot.toFixed(1)}% 100%, ${fx.toFixed(1)}% ${fy.toFixed(1)}%)`,
+      flapOpacity: Math.max(0.18, rem / 110)
+    };
   }
 
   function mountPeelableStage(containerEl, opts) {
@@ -3177,15 +4943,15 @@
       <div class="mlrs-peel-wrap">
         <div class="mlrs-peel-bar">
           <button type="button" class="mlrs-peel-btn" data-role="peel-toggle">🩹 Peel Back Stencil</button>
-          <input type="range" min="0" max="100" value="${peelPct}" data-role="peel-range" style="width:115px;cursor:pointer;accent-color:#0284c7" title="Drag to peel custom vinyl overlay and inspect factory hardware underneath"/>
-          <span data-role="peel-lbl" style="font-weight:700;min-width:118px;text-align:left">Stencil Applied (0%)</span>
+          <input type="range" min="0" max="100" value="${peelPct}" data-role="peel-range" style="width:105px;cursor:pointer;accent-color:#0284c7"/>
+          <span data-role="peel-lbl" style="font-weight:700;min-width:110px;text-align:left">Stencil On (0%)</span>
           <span style="color:#0284c7;font-weight:700">${linkedTitle}</span>
         </div>
         <div class="mlrs-peel-stack" data-role="peel-stack">
           <div class="mlrs-peel-under" data-role="under-stage"></div>
           <div class="mlrs-peel-over" data-role="over-stage"></div>
           <div class="mlrs-peel-flap" data-role="peel-flap"></div>
-          <div class="mlrs-peel-corner-hit" data-role="peel-corner" title="Click corner to peel back custom stencil & reveal factory remote"></div>
+          <div class="mlrs-peel-corner-hit" data-role="peel-corner" title="Click corner to peel back custom stencil"></div>
         </div>
       </div>
     `;
@@ -3199,87 +4965,47 @@
     const rangeEl = containerEl.querySelector('[data-role="peel-range"]');
     const lblEl   = containerEl.querySelector('[data-role="peel-lbl"]');
 
-    // Under-layer = bare factory hardware (NO facia, NO segmented touchZones stuck on surface!)
     const underCtrl = mountInteractiveStage(underEl, {
-      model: physicalModel,
-      uid: `${opts.uid || 'peel'}_phys`,
-      maxHeight: maxH,
-      facia: null,
-      touchZones: null,
-      calibration: opts.physicalCalibration || opts.calibration,
-      activeZone: opts.activeZone ?? 1,
+      model: physicalModel, uid: `${opts.uid || 'peel'}_phys`, maxHeight: maxH,
+      facia: null, touchZones: null,
+      calibration: opts.physicalCalibration || opts.calibration, activeZone: opts.activeZone ?? 1,
       onZoneChange: (z) => { if (opts.onZoneChange) opts.onZoneChange(z); },
       onScrubPreview: opts.onScrubPreview,
-      onAction: (act, val, z, lbl) => {
-        if (opts.onPhysicalAction) opts.onPhysicalAction(act, val, z, lbl);
-        else if (opts.onAction) opts.onAction(act, val, z, lbl, 'physical');
-      }
+      onAction: (act, val, z, lbl) => { if (opts.onPhysicalAction) opts.onPhysicalAction(act, val, z, lbl); else if (opts.onAction) opts.onAction(act, val, z, lbl); }
     });
 
-    // Over-layer = custom vinyl stencil overlay + segmented pads
     const overCtrl = mountInteractiveStage(overEl, {
-      model: overlayModel,
-      uid: `${opts.uid || 'peel'}_cust`,
-      maxHeight: maxH,
+      model: overlayModel, uid: `${opts.uid || 'peel'}_cust`, maxHeight: maxH,
       facia: opts.facia || (overlayModel && overlayModel.facia),
       touchZones: opts.touchZones || (overlayModel && overlayModel.touchZones),
-      calibration: opts.calibration,
-      activeZone: opts.activeZone ?? 1,
+      calibration: opts.calibration, activeZone: opts.activeZone ?? 1,
       onZoneChange: (z) => { if (opts.onZoneChange) opts.onZoneChange(z); },
       onScrubPreview: opts.onScrubPreview,
-      onAction: (act, val, z, lbl) => {
-        if (opts.onCustomAction) opts.onCustomAction(act, val, z, lbl);
-        else if (opts.onAction) opts.onAction(act, val, z, lbl, 'custom');
-      }
+      onAction: (act, val, z, lbl) => { if (opts.onCustomAction) opts.onCustomAction(act, val, z, lbl); else if (opts.onAction) opts.onAction(act, val, z, lbl); }
     });
 
     function applyPeel(nextPct, isScrub) {
       peelPct = Math.max(0, Math.min(100, Number(nextPct) || 0));
       if (stackEl) stackEl.classList.toggle('scrubbing', Boolean(isScrub));
       const clips = computePeelClipPolygons(peelPct);
-      if (overEl) {
-        overEl.style.clipPath = clips.overClip;
-        overEl.style.webkitClipPath = clips.overClip;
-        overEl.style.pointerEvents = peelPct >= 85 ? 'none' : 'auto';
-      }
-      if (flapEl) {
-        flapEl.style.clipPath = clips.flapClip;
-        flapEl.style.webkitClipPath = clips.flapClip;
-        flapEl.style.opacity = String(clips.flapOpacity);
-      }
-      if (cornerEl) cornerEl.style.opacity = peelPct >= 95 ? '0.25' : '1';
+      if (overEl) { overEl.style.clipPath = clips.overClip; overEl.style.pointerEvents = peelPct >= 85 ? 'none' : 'auto'; }
+      if (flapEl) { flapEl.style.clipPath = clips.flapClip; flapEl.style.opacity = String(clips.flapOpacity); }
       if (rangeEl && Number(rangeEl.value) !== Math.round(peelPct)) rangeEl.value = String(Math.round(peelPct));
       if (btnEl) {
         btnEl.classList.toggle('peeled', peelPct >= 50);
         btnEl.textContent = peelPct >= 85 ? '🩹 Re-Apply Stencil' : (peelPct > 10 ? '🩹 Peel Fully (100%)' : '🩹 Peel Back Stencil');
       }
-      if (lblEl) {
-        lblEl.textContent = peelPct === 0
-          ? 'Stencil Applied (0%)'
-          : (peelPct >= 98 ? `Bare ${physicalModel.id} Exposed` : `Peeling (${Math.round(peelPct)}% X-Ray)`);
-      }
-      if (opts.onPeelChange) opts.onPeelChange(peelPct);
+      if (lblEl) lblEl.textContent = peelPct === 0 ? 'Stencil On (0%)' : (peelPct >= 98 ? `Bare ${physicalModel.id}` : `Peeled ${Math.round(peelPct)}%`);
     }
-
-    const cyclePeel = () => {
-      if (peelPct < 40) applyPeel(52, false);
-      else if (peelPct < 92) applyPeel(100, false);
-      else applyPeel(0, false);
-    };
+    const cyclePeel = () => applyPeel(peelPct < 40 ? 52 : (peelPct < 92 ? 100 : 0), false);
     if (btnEl) btnEl.onclick = cyclePeel;
     if (cornerEl) cornerEl.onclick = (e) => { e.stopPropagation(); cyclePeel(); };
-    if (rangeEl) {
-      rangeEl.oninput = (e) => applyPeel(Number(e.target.value), true);
-      rangeEl.onchange = (e) => applyPeel(Number(e.target.value), false);
-    }
-
+    if (rangeEl) { rangeEl.oninput = (e) => applyPeel(e.target.value, true); rangeEl.onchange = (e) => applyPeel(e.target.value, false); }
     applyPeel(peelPct, false);
 
     return {
-      underCtrl,
-      overCtrl,
+      underCtrl, overCtrl,
       setPeel: (p) => applyPeel(p, false),
-      getPeel: () => peelPct,
       pulseAction: (action, zone, isRf, val, sourceLayer) => {
         if (sourceLayer === 'physical') {
           if (underCtrl && underCtrl.pulseAction) underCtrl.pulseAction(action, zone, isRf, val);
@@ -3325,21 +5051,6 @@
     const safeName = String(filename || 'stencil_1to1.svg').replace(/[^a-zA-Z0-9._-]/g, '_');
     const mime = mimeType || 'image/svg+xml';
     const text = String(content || '');
-
-    // 1. If a server-side Content-Disposition attachment stager is provided (e.g. Home Assistant token route), use it first!
-    if (opts && typeof opts.stageServerUrl === 'function') {
-      try {
-        const dlUrl = await opts.stageServerUrl(safeName, text, mime);
-        if (dlUrl) {
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = dlUrl;
-          document.body.appendChild(iframe);
-          setTimeout(() => iframe.remove(), 60000);
-          return true;
-        }
-      } catch (_) {}
-    }
     if (root.__MLRS_STAGE_DOWNLOAD) {
       try {
         const dlUrl = await root.__MLRS_STAGE_DOWNLOAD(safeName, text, mime);
@@ -3353,17 +5064,12 @@
         }
       } catch (_) {}
     }
-
-    // 1b. Direct HTTP POST attachment bounce (ESP32 Hub / Smart-Twin / Homebridge) — 100% immune to Chrono blob: hangs!
     const postEndpoint = (opts && opts.downloadEndpoint)
-      || (opts && opts.hubBase ? `${String(opts.hubBase).replace(/\/+$/, '')}/api/remotes/download` : '')
-      || ((typeof location !== 'undefined' && (location.pathname === '/' || location.port === '8588')) ? '/api/remotes/download' : '');
-    if (postEndpoint) {
+      || (opts && opts.hubBase ? `${String(opts.hubBase).replace(/\/+$/, '')}/api/remotes/download` : '/api/remotes/download');
+    if (postEndpoint && !root.__MLRS_STAGE_DOWNLOAD) {
       submitPostDownloadForm(postEndpoint, safeName, text);
       return true;
     }
-
-    // 2. Native OS Save File Picker (Chromium secure contexts — never hijacked by download extensions)
     if (typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function') {
       try {
         const ext = safeName.endsWith('.json') ? '.json' : '.svg';
@@ -3379,13 +5085,10 @@
         if (err && err.name === 'AbortError') return false;
       }
     }
-
-    // 3. Inline Base64 Data-URI download (contains full payload inline so external download extensions can read it, unlike blob: URLs!)
     try {
       const b64 = btoa(unescape(encodeURIComponent(text)));
-      const dataUri = `data:application/octet-stream;base64,${b64}`;
       const a = document.createElement('a');
-      a.href = dataUri;
+      a.href = `data:application/octet-stream;base64,${b64}`;
       a.setAttribute('download', safeName);
       a.style.display = 'none';
       document.body.appendChild(a);
@@ -3408,49 +5111,95 @@
   function mountShowcaseTour(containerEl, opts) {
     injectStudioStyles(containerEl);
     if (!containerEl || !opts || !Array.isArray(opts.steps) || !opts.steps.length) return null;
+    const scopeRoot = opts.scopeEl || document;
     const storageKey = `mlrs_tour_${opts.tourId || 'default'}`;
     let idx = Number(localStorage.getItem(storageKey + '_idx') || 0);
     if (idx < 0 || idx >= opts.steps.length) idx = 0;
     let hidden = localStorage.getItem(storageKey + '_hide') === '1';
 
-    function render() {
+    function clearHighlights() {
+      scopeRoot.querySelectorAll('.mlrs-tour-focus').forEach(el => el.classList.remove('mlrs-tour-focus'));
+    }
+
+    function applyHighlight(step) {
+      clearHighlights();
+      if (hidden || !step || !step.targetSelector) return;
+      const target = scopeRoot.querySelector(step.targetSelector);
+      if (target) {
+        target.classList.add('mlrs-tour-focus');
+        if (opts.autoScroll !== false && typeof target.scrollIntoView === 'function') {
+          try { target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+        }
+      }
+    }
+
+    function render(skipScroll) {
       if (hidden) {
-        containerEl.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button type="button" class="mlrs-tour-reopen" data-tour="open">💡 Guided Showcase Tour (${opts.steps.length} Interactive Tips)</button></div>`;
+        clearHighlights();
+        containerEl.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button type="button" class="mlrs-tour-reopen" data-tour="open">🧭 Guided Build Path (${opts.steps.length} Steps: Bare Remote → Device-Linked Stencil)</button></div>`;
         const ob = containerEl.querySelector('[data-tour="open"]');
         if (ob) ob.onclick = () => { hidden = false; localStorage.setItem(storageKey + '_hide', '0'); render(); };
         return;
       }
       const step = opts.steps[idx];
-      const dotsHtml = opts.steps.map((_, di) => `<span class="mlrs-tour-dot ${di === idx ? 'on' : ''}"></span>`).join('');
+      const hasValidator = typeof step.isComplete === 'function';
+      const done = hasValidator ? Boolean(step.isComplete()) : false;
+      const dotsHtml = opts.steps.map((st, di) => {
+        const stDone = typeof st.isComplete === 'function' && st.isComplete();
+        return `<span class="mlrs-tour-dot ${di === idx ? 'on' : ''}" style="${stDone && di !== idx ? 'background:#10b981;opacity:0.85' : ''}"></span>`;
+      }).join('');
+
+      const statusBadge = hasValidator
+        ? (done
+            ? `<span class="mlrs-tour-done-badge">✅ Step Validated — Click Next ▶</span>`
+            : `<span class="mlrs-tour-pending-badge">🎯 Highlighted Area Active: ${step.hintShort || 'Complete highlighted control'}</span>`)
+        : '';
+
       containerEl.innerHTML = `
-        <div class="mlrs-tour-bar">
-          <div class="mlrs-tour-left">
-            <div class="mlrs-tour-icon">💡</div>
-            <div style="min-width:0">
-              <div>
-                <span class="mlrs-tour-step-badge">Guided Tip ${idx + 1} of ${opts.steps.length}</span>
-                <strong style="font-size:13px">${step.title}</strong>
-                <span class="mlrs-tour-dots">${dotsHtml}</span>
+        <div class="mlrs-tour-bar" style="${done ? 'border-color:#86efac;background:linear-gradient(90deg,rgba(220,252,231,0.45),var(--mlrs-bg))' : ''}">
+          <div style="display:flex;align-items:flex-start;gap:10px;min-width:0;flex:1">
+            <span style="font-size:18px;line-height:1;margin-top:2px">${done ? '✅' : '🧭'}</span>
+            <div style="min-width:0;flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
+                <span style="font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--mlrs-primary)">GUIDED PATH ${idx + 1} OF ${opts.steps.length}</span>
+                <span style="font-size:12.5px;font-weight:700;color:var(--mlrs-fg)">${step.title}</span>
+                <span style="display:inline-flex;gap:4px;align-items:center">${dotsHtml}</span>
+                ${statusBadge}
               </div>
-              <div style="margin-top:2px;opacity:0.88;font-size:12px">${step.body}</div>
+              <div style="font-size:11.5px;color:var(--mlrs-muted-fg);line-height:1.38">${step.body}</div>
             </div>
           </div>
-          <div class="mlrs-tour-nav">
-            <button type="button" class="mlrs-tour-btn" data-tour="prev">◀ Prev</button>
-            ${step.actionLabel ? `<button type="button" class="mlrs-tour-btn demo" data-tour="demo">✨ ${step.actionLabel}</button>` : ''}
-            <button type="button" class="mlrs-tour-btn" data-tour="next">Next ▶</button>
-            <button type="button" class="mlrs-tour-btn" data-tour="hide" title="Minimize Tour Frame">✕ Hide</button>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0">
+            <button type="button" class="mlrs-btn" data-tour="prev" style="padding:4px 9px;font-size:11.5px">◀ Prev</button>
+            ${step.actionLabel ? `<button type="button" class="mlrs-btn ${done ? '' : 'primary'}" data-tour="act" style="padding:4px 10px;font-size:11.5px">${step.actionLabel}</button>` : ''}
+            <button type="button" class="mlrs-btn ${done ? 'primary' : ''}" data-tour="next" style="padding:4px 10px;font-size:11.5px">${idx === opts.steps.length - 1 ? 'Finish ✓' : 'Next ▶'}</button>
+            <button type="button" class="mlrs-btn" data-tour="hide" style="padding:4px 8px;font-size:11.5px">✕ Hide</button>
           </div>
-        </div>
-      `;
+        </div>`;
+
+      if (!skipScroll) applyHighlight(step);
+      else {
+        clearHighlights();
+        const t = step.targetSelector ? scopeRoot.querySelector(step.targetSelector) : null;
+        if (t) t.classList.add('mlrs-tour-focus');
+      }
+
       containerEl.querySelector('[data-tour="prev"]').onclick = () => {
         idx = (idx - 1 + opts.steps.length) % opts.steps.length;
         localStorage.setItem(storageKey + '_idx', String(idx));
+        if (opts.steps[idx].onEnter) opts.steps[idx].onEnter();
         render();
       };
       containerEl.querySelector('[data-tour="next"]').onclick = () => {
+        if (idx === opts.steps.length - 1) {
+          hidden = true;
+          localStorage.setItem(storageKey + '_hide', '1');
+          render();
+          return;
+        }
         idx = (idx + 1) % opts.steps.length;
         localStorage.setItem(storageKey + '_idx', String(idx));
+        if (opts.steps[idx].onEnter) opts.steps[idx].onEnter();
         render();
       };
       containerEl.querySelector('[data-tour="hide"]').onclick = () => {
@@ -3458,19 +5207,568 @@
         localStorage.setItem(storageKey + '_hide', '1');
         render();
       };
-      const db = containerEl.querySelector('[data-tour="demo"]');
-      if (db && typeof step.onAction === 'function') {
-        db.onclick = () => step.onAction();
+      const actBtn = containerEl.querySelector('[data-tour="act"]');
+      if (actBtn && typeof step.onAction === 'function') {
+        actBtn.onclick = () => { step.onAction(); };
       }
     }
+
     render();
-    return { show: () => { hidden = false; localStorage.setItem(storageKey + '_hide', '0'); render(); } };
+    return { refresh: () => render(true), clearHighlights };
+  }
+
+  // ============================================================================
+  // 4. SMART DEVICE-TO-REMOTE RECOMMENDER & AUTO-BUILDER WIZARD
+  // ============================================================================
+  function inferDeviceProfile(dev) {
+    const dom = String(dev.domain || 'light').toLowerCase();
+    const nm = String(dev.name || dev.entity_id || 'Device').trim();
+    const low = nm.toLowerCase();
+    // Pick best icon + preferred interaction style ('slider' | 'multistep' | 'button')
+    if (dom === 'cover' || /blind|shade|shutter|roller|awning/.test(low)) {
+      const isCurt = /curtain|drape|sheer/.test(low);
+      return { kind: 'slider', icon: isCurt ? 'curtains' : 'blinds', iconEnd: 'sun', sMin: isCurt ? 0 : 100, sMax: isCurt ? 100 : 0, arrows: 'chevron', badge: 'Slider (100\u21920%)' };
+    }
+    if (dom === 'fan' || /\bfan\b|ventil|exhaust/.test(low)) {
+      return { kind: 'multistep', icon: /exhaust|vent/.test(low) ? 'extractor' : 'fan', steps: 6, unit: 'Spd', badge: 'Step 1\u20136 + Hold' };
+    }
+    if (dom === 'climate' || /\bac\b|aircon|split|climate|heat|hvac/.test(low)) {
+      return { kind: 'multistep', icon: /heat|towel/.test(low) ? 'heater' : 'ac', steps: 5, unit: 'Temp', badge: 'Step 1\u20135 + Hold' };
+    }
+    if (dom === 'media_player' || /sonos|speaker|tv|cinema|audio|amp/.test(low)) {
+      const isTv = /\btv\b|cinema|projector/.test(low);
+      return isTv
+        ? { kind: 'button', icon: 'tv', badge: 'Tap Toggle' }
+        : { kind: 'slider', icon: 'speaker', iconEnd: 'music', sMin: 0, sMax: 80, arrows: 'dots', badge: 'Vol Slider (0\u219280%)' };
+    }
+    if (dom === 'scene' || dom === 'script') {
+      return { kind: 'button', icon: /night|sleep/.test(low) ? 'moon' : (/morning|coffee/.test(low) ? 'coffee' : 'sparkles'), badge: 'Scene Tap' };
+    }
+    if (dom === 'light') {
+      const ic = /strip|cove|led/.test(low) ? 'strip' : (/pendant|chandelier/.test(low) ? 'pendant' : (/lamp|bed/.test(low) ? 'lamp' : (/downlight|spot/.test(low) ? 'downlight' : 'bulb')));
+      const dimmable = dev.dimmable !== false;
+      return dimmable
+        ? { kind: 'slider_or_zone', icon: ic, iconEnd: 'sun', sMin: 5, sMax: 100, arrows: 'dots', badge: 'Dimmer / Zone' }
+        : { kind: 'button', icon: ic, badge: 'Light Toggle' };
+    }
+    const roomIco = /garag/.test(low) ? 'garage' : (/garden|patio|lawn/.test(low) ? 'garden' : (/lock|away/.test(low) ? 'lock' : 'power'));
+    return { kind: 'button', icon: roomIco, badge: 'Tap Toggle' };
+  }
+
+  function cleanShortLabel(rawName) {
+    return String(rawName || 'Device')
+      .replace(/^\[Virtual\]\s*/i, '')
+      .replace(/^MiBoxer 3D Smart Home Twin\s*/i, '')
+      .replace(/\b(Z\d+|Light|Switch|Cover|Entity|Smart)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 11) || 'Device';
+  }
+
+  function synthesizeRemoteForDevices(modelId, selectedDevs) {
+    const Cat = root.MiBoxerCatalog;
+    const baseModel = Cat.MODELS.find(m => m.id === modelId && !m.isCustom) || Cat.MODELS[0];
+    const bp = Cat.getPanelBlueprint(baseModel);
+    const dims = Cat.getPhysicalDims(baseModel);
+    const tz = normalizeTouchZones(null);
+    const pads = {};
+    const bindings = [];
+
+    const sliders = [];
+    const stepsAndBtns = [];
+    selectedDevs.forEach(d => {
+      const prof = Object.assign({}, inferDeviceProfile(d), d.overrideKind ? { kind: d.overrideKind } : {});
+      const item = { dev: d, prof, shortLbl: cleanShortLabel(d.name) };
+      if (prof.kind === 'slider') sliders.push(item);
+      else if (prof.kind === 'slider_or_zone') {
+        // Put up to 3 primary dimmable lights onto sliders if space allows, rest onto zone rockers/buttons
+        if (sliders.length < 3 && selectedDevs.length <= 8) sliders.push(Object.assign({}, item, { prof: Object.assign({}, prof, { kind: 'slider' }) }));
+        else stepsAndBtns.push(item);
+      } else {
+        stepsAndBtns.push(item);
+      }
+    });
+
+    // Discover physical surfaces on this candidate model
+    const ringSlot = bp.slots.find(s => s.surf === 'hue_ring' && s.type === 'ring');
+    const hHueSlot = bp.slots.find(s => s.surf === 'hue_ring' && s.type === 'hbar');
+    const barSlots = bp.slots.filter(s => s.surf && s.surf !== 'hue_ring');
+    const allSegSurfaces = [];
+    if (ringSlot) allSegSurfaces.push({ surf: 'hue_ring', pref: 'hue_seg_', maxSlider: 4, maxBtn: 6, isRing: true });
+    if (hHueSlot) allSegSurfaces.push({ surf: 'hue_ring', pref: 'hue_seg_', maxSlider: 3, maxBtn: 4, isRing: false });
+    barSlots.forEach(bs => {
+      const pref = bs.surf.split('_')[0] + '_seg_';
+      allSegSurfaces.push({ surf: bs.surf, pref, maxSlider: 2, maxBtn: 4, isRing: false, slotKey: bs.key });
+    });
+
+    const discreteSlots = bp.slots.filter(s => !s.surf && s.key !== 'btn_on' && s.key !== 'btn_off');
+    const onOffSlots = bp.slots.filter(s => s.key === 'btn_on' || s.key === 'btn_off');
+
+    // Allocate sliders first across unsplit bars (if 1 slider fits a bar cleanly) or segmented rings/bars!
+    const sliderQueue = sliders.slice();
+    const btnQueue = stepsAndBtns.slice();
+
+    allSegSurfaces.forEach(sf => {
+      if (!sliderQueue.length && btnQueue.length <= discreteSlots.length) return;
+      if (sliderQueue.length >= 1 && !sf.isRing && sliderQueue.length === 1 && sf.slotKey) {
+        // Use full unsplit bar as a sleek dedicated Custom Stencil Slider!
+        const it = sliderQueue.shift();
+        pads[sf.slotKey] = {
+          customTrack: true, segmentMode: 'slider',
+          label: it.shortLbl, sublabel: `${it.prof.sMin ?? 0}\u2192${it.prof.sMax ?? 100}%`,
+          icon: it.prof.icon, iconEnd: it.prof.iconEnd || 'sun', iconPos: 'both',
+          sliderMin: it.prof.sMin ?? 0, sliderMax: it.prof.sMax ?? 100,
+          sliderPitch: 2.0, sliderArrows: it.prof.arrows || 'chevron', luminous: true
+        };
+        bindings.push({ slot: sf.slotKey, gesture: 'slider', entity_id: it.dev.entity_id, label: it.dev.name });
+        return;
+      }
+      // Otherwise segment this ring/bar to hold sliders + overflow step/toggle buttons
+      const wantFromSliders = Math.min(sf.maxSlider, sliderQueue.length);
+      const overflowBtns = Math.max(0, btnQueue.length - discreteSlots.length);
+      const wantTotal = Math.min(sf.maxBtn, Math.max(wantFromSliders > 0 ? Math.max(2, wantFromSliders) : 0, wantFromSliders + Math.min(sf.maxBtn - wantFromSliders, overflowBtns)));
+      if (wantTotal >= 2) {
+        tz[sf.surf].enabled = true;
+        tz[sf.surf].segments = wantTotal;
+        if (sf.isRing) tz[sf.surf].offset_deg = wantTotal === 4 ? -45 : -30;
+        tz[sf.surf].labels = [];
+        for (let i = 0; i < wantTotal; i++) {
+          const sKey = `${sf.pref}${i + 1}`;
+          const it = sliderQueue.shift() || btnQueue.shift();
+          if (!it) {
+            pads[sKey] = { style: 'blank' };
+            tz[sf.surf].labels.push('');
+            continue;
+          }
+          tz[sf.surf].labels.push(it.shortLbl);
+          if (it.prof.kind === 'slider') {
+            pads[sKey] = {
+              segmentMode: 'slider', label: it.shortLbl,
+              sublabel: `${it.prof.sMin ?? 0}\u2192${it.prof.sMax ?? 100}%`,
+              icon: it.prof.icon, iconEnd: it.prof.iconEnd || 'sun', iconPos: 'both',
+              sliderMin: it.prof.sMin ?? 0, sliderMax: it.prof.sMax ?? 100,
+              sliderPitch: 2.1, sliderArrows: it.prof.arrows || 'chevron', luminous: i === 0
+            };
+            bindings.push({ slot: sKey, gesture: 'slider', entity_id: it.dev.entity_id, label: it.dev.name });
+          } else if (it.prof.kind === 'multistep') {
+            pads[sKey] = {
+              icon: it.prof.icon, iconPos: sf.isRing ? 'left' : 'top', label: it.shortLbl,
+              sublabel: `1-${it.prof.steps || 5} \u2022 Hold`,
+              multifunc: { enabled: true, steps: it.prof.steps || 5, unit: it.prof.unit || 'Spd' }
+            };
+            bindings.push({ slot: sKey, gesture: 'single_tap', entity_id: it.dev.entity_id, label: it.dev.name });
+          } else {
+            pads[sKey] = { icon: it.prof.icon, iconPos: sf.isRing ? 'left' : 'top', label: it.shortLbl };
+            bindings.push({ slot: sKey, gesture: 'single_tap', entity_id: it.dev.entity_id, label: it.dev.name });
+          }
+        }
+      }
+    });
+
+    // Any remaining slider items degrade gracefully to multi-step pads on discrete buttons
+    const remAll = sliderQueue.concat(btnQueue);
+    const allBtnTargets = discreteSlots.concat(onOffSlots);
+    if (onOffSlots.find(s => s.key === 'btn_on') && remAll.length <= discreteSlots.length) {
+      pads.btn_on = { icon: 'power', label: 'All ON', luminous: true };
+    }
+    if (onOffSlots.find(s => s.key === 'btn_off') && remAll.length <= discreteSlots.length) {
+      pads.btn_off = { icon: 'moon', label: 'All OFF' };
+    }
+
+    allBtnTargets.forEach(sl => {
+      if (pads[sl.key]) return;
+      const it = remAll.shift();
+      if (!it) {
+        // Mask unused extra buttons cleanly so the stencil looks bespoke!
+        pads[sl.key] = { style: 'blank' };
+        return;
+      }
+      if (it.prof.kind === 'multistep' || it.prof.kind === 'slider') {
+        pads[sl.key] = {
+          icon: it.prof.icon, label: it.shortLbl,
+          multifunc: { enabled: true, steps: it.prof.steps || 5, unit: it.prof.unit || 'Lvl' }
+        };
+      } else {
+        pads[sl.key] = { icon: it.prof.icon, label: it.shortLbl };
+      }
+      bindings.push({ slot: sl.key, gesture: 'single_tap', entity_id: it.dev.entity_id, label: it.dev.name });
+    });
+
+    const unplacedCount = remAll.length;
+    const totalCap = allBtnTargets.length + allSegSurfaces.reduce((acc, s) => acc + s.maxBtn, 0);
+    // Score fit quality (0..99)
+    let score = 96;
+    if (unplacedCount > 0) score -= unplacedCount * 18;
+    const ratio = selectedDevs.length / Math.max(1, discreteSlots.length + allSegSurfaces.length * 3);
+    if (ratio < 0.32) score -= Math.round((0.32 - ratio) * 45); // Penalize oversized remote for 1-2 devices
+    if (sliders.length > 0 && allSegSurfaces.length === 0) score -= 25;
+    if (sliders.length >= 3 && baseModel.id === 'B8') score += 5;
+    if (selectedDevs.length <= 5 && (baseModel.id === 'B0' || baseModel.id === 'B3' || baseModel.id === 'K6')) score += 4;
+    score = Math.max(35, Math.min(99, score));
+
+    const facia = {
+      v: 2, enabled: true,
+      theme: baseModel.finish === 'black' ? 'matte_black' : 'pure_white',
+      fontFamily: 'geometric', fontScale: 100,
+      panelTitle: `${selectedDevs.length}-DEVICE SMART PANEL`,
+      defaultPadStyle: 'keycap', showLedPinhole: true, hideLogo: true,
+      luminous: { enabled: true, border: true, header: true, slots: false },
+      pads
+    };
+
+    const summaryReason = unplacedCount === 0
+      ? `Fits all ${selectedDevs.length} selected device(s) (${sliders.length} variable slider${sliders.length === 1 ? '' : 's'} + ${selectedDevs.length - sliders.length} tap/step pad${selectedDevs.length - sliders.length === 1 ? '' : 's'}) on ${dims.width_mm}\u00d7${dims.height_mm} mm ${dims.form_factor || 'glass'}.`
+      : `Places ${selectedDevs.length - unplacedCount} of ${selectedDevs.length} devices (${unplacedCount} overflow \u2014 pick B8 or FUT089 for higher capacity).`;
+
+    return { model: baseModel, dims, score, unplacedCount, totalCap, tz, facia, bindings, summaryReason };
+  }
+
+  function openDeviceRecommenderWizard(opts) {
+    injectStudioStyles();
+    const o = opts || {};
+    const Cat = root.MiBoxerCatalog;
+
+    // Seed device list from HA / Homebridge entities (or rich starter catalog if standalone/empty)
+    let rawDevs = Array.isArray(o.devices) ? o.devices.slice() : [];
+    if (!rawDevs.length) {
+      rawDevs = [
+        { entity_id: 'cover.living_roller_blinds', name: 'Living Blinds', domain: 'cover' },
+        { entity_id: 'cover.sheer_curtains', name: 'Sheer Curtains', domain: 'cover' },
+        { entity_id: 'fan.ceiling_fan', name: 'Ceiling Fan', domain: 'fan' },
+        { entity_id: 'climate.split_system_ac', name: 'Split AC', domain: 'climate' },
+        { entity_id: 'light.lounge_downlights', name: 'Lounge Lights', domain: 'light', dimmable: true },
+        { entity_id: 'light.kitchen_island', name: 'Kitchen Pendant', domain: 'light', dimmable: true },
+        { entity_id: 'media_player.living_sonos', name: 'Living Sonos', domain: 'media_player' },
+        { entity_id: 'scene.movie_night', name: 'Cinema Scene', domain: 'scene' }
+      ];
+    }
+
+    const selectedMap = new Map();
+    // Pre-select up to 5 diverse sample devices on first open so recommendations render live immediately!
+    const seenDom = new Set();
+    rawDevs.forEach(d => {
+      if (selectedMap.size < 5 && !seenDom.has(d.domain)) {
+        seenDom.add(d.domain);
+        selectedMap.set(d.entity_id, Object.assign({}, d));
+      }
+    });
+    if (selectedMap.size < 3) {
+      rawDevs.slice(0, 4).forEach(d => selectedMap.set(d.entity_id, Object.assign({}, d)));
+    }
+
+    let filterDom = 'all';
+    let searchTxt = '';
+    const candidateModelIds = ['B8', 'B0', 'B4', 'B3', 'U3', 'M4', 'K6', 'FUT089'];
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'mlrs-modal-backdrop' + (isHostDark() ? ' mlrs-dark' : '');
+
+    function renderWiz() {
+      const selArr = Array.from(selectedMap.values());
+      const recs = candidateModelIds
+        .map(mid => synthesizeRemoteForDevices(mid, selArr))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      const domains = ['all', ...Array.from(new Set(rawDevs.map(d => d.domain)))];
+      const filteredDevs = rawDevs.filter(d => {
+        if (filterDom !== 'all' && d.domain !== filterDom) return false;
+        if (searchTxt && !`${d.name} ${d.entity_id} ${d.domain}`.toLowerCase().includes(searchTxt.toLowerCase())) return false;
+        return true;
+      });
+
+      backdrop.innerHTML = `
+        <div class="mlrs-modal" style="max-width:1440px;height:90vh" onclick="event.stopPropagation()">
+          <div class="mlrs-topbar">
+            <div>
+              <div style="font-size:16px;font-weight:800">\uD83E\uDE84 Smart Device-to-Remote Recommender &amp; Auto-Builder</div>
+              <div style="font-size:12px;color:var(--mlrs-muted-fg);margin-top:2px">Tick the Home Assistant / Homebridge devices you want on one remote \u2014 we rank the best-fit MiBoxer hardware &amp; pre-build your custom stencil!</div>
+            </div>
+            <button type="button" class="mlrs-btn" id="mlrsWizClose">\u2715 Close</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:minmax(330px, 410px) 1fr;flex:1;min-height:0;overflow:hidden">
+            <!-- LEFT: Device Picker & Custom Slot Adder -->
+            <div class="mlrs-col" style="display:flex;flex-direction:column;gap:8px">
+              <div class="mlrs-sec-title" style="margin:0">1. Select Devices to Put on One Remote (${selArr.length} chosen)</div>
+              <div style="display:flex;gap:6px">
+                <input type="text" class="mlrs-input" id="mlrsWizSearch" placeholder="Search lights, blinds, fans, AC, Sonos\u2026" value="${searchTxt.replace(/"/g, '&quot;')}"/>
+                <button type="button" class="mlrs-btn" id="mlrsWizClearSel" style="white-space:nowrap;padding:4px 8px;font-size:11px">Clear</button>
+              </div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                ${domains.map(dm => `<button type="button" class="mlrs-btn ${filterDom === dm ? 'active-tab' : ''}" data-wiz-dom="${dm}" style="padding:3px 8px;font-size:11px;text-transform:capitalize">${dm === 'all' ? 'All (' + rawDevs.length + ')' : dm}</button>`).join('')}
+              </div>
+
+              <div style="flex:1;min-height:160px;overflow-y:auto;border:1px solid var(--mlrs-border);border-radius:8px;padding:6px;background:var(--mlrs-muted)">
+                ${filteredDevs.slice(0, 80).map(d => {
+                  const checked = selectedMap.has(d.entity_id);
+                  const chosenObj = selectedMap.get(d.entity_id) || d;
+                  const prof = inferDeviceProfile(chosenObj);
+                  const effKind = chosenObj.overrideKind || (prof.kind === 'slider_or_zone' ? 'slider' : prof.kind);
+                  return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 7px;margin-bottom:4px;border-radius:6px;background:var(--mlrs-bg);border:1px solid ${checked ? '#0284c7' : 'var(--mlrs-border)'}">
+                    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;min-width:0;flex:1;margin:0">
+                      <input type="checkbox" data-wiz-chk="${d.entity_id.replace(/"/g, '&quot;')}" ${checked ? 'checked' : ''}/>
+                      <span style="min-width:0;flex:1">
+                        <span style="display:block;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</span>
+                        <span style="display:block;font-size:10px;color:var(--mlrs-muted-fg)">${d.domain} \u2022 ${d.entity_id}</span>
+                      </span>
+                    </label>
+                    ${checked ? `
+                      <select class="mlrs-select" data-wiz-kind="${d.entity_id.replace(/"/g, '&quot;')}" style="width:108px;padding:2px 5px;font-size:10.5px">
+                        <option value="slider" ${effKind === 'slider' ? 'selected' : ''}>\uD83C\uDF9A\uFE0F Slider</option>
+                        <option value="multistep" ${effKind === 'multistep' ? 'selected' : ''}>\uD83D\uDD22 Step Cycle</option>
+                        <option value="button" ${effKind === 'button' ? 'selected' : ''}>\uD83D\uDD18 Tap Button</option>
+                      </select>
+                    ` : `<span style="font-size:10px;color:var(--mlrs-muted-fg);white-space:nowrap">${prof.badge}</span>`}
+                  </div>`;
+                }).join('')}
+              </div>
+
+              <div class="mlrs-box-sub" style="margin:0">
+                <div style="font-size:11px;font-weight:700;margin-bottom:4px">Planning ahead? Add a custom device slot:</div>
+                <div style="display:flex;gap:5px">
+                  <input type="text" class="mlrs-input" id="mlrsWizCustomName" placeholder="e.g. Patio Pergola Louvres" style="padding:4px 7px;font-size:11.5px"/>
+                  <select class="mlrs-select" id="mlrsWizCustomDom" style="width:98px;padding:4px 5px;font-size:11px">
+                    <option value="cover">Blinds</option>
+                    <option value="light">Light</option>
+                    <option value="fan">Fan</option>
+                    <option value="climate">AC</option>
+                    <option value="media_player">Audio</option>
+                    <option value="scene">Scene</option>
+                  </select>
+                  <button type="button" class="mlrs-btn primary" id="mlrsWizAddCustom" style="padding:4px 9px;font-size:11.5px">+ Add</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: Top 3 Ranked MiBoxer Remotes + Live Pre-Configured Stencil Previews -->
+            <div style="padding:14px 18px;overflow-y:auto;background:var(--mlrs-muted)">
+              <div class="mlrs-sec-title">2. Best-Fit MiBoxer Remotes &amp; Auto-Built Stencil Layouts (Click to Use or Edit)</div>
+              ${selArr.length === 0 ? `<div class="mlrs-box-sub" style="background:var(--mlrs-bg);padding:24px;text-align:center">Tick one or more devices on the left to generate ranked hardware &amp; stencil recommendations!</div>` : `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));gap:12px">
+                  ${recs.map((rc, rIdx) => {
+                    const svgHtml = Cat.renderCapacitiveStencilSvg(rc.model, {
+                      size: 'large', uid: `wiz_rec_${rIdx}`, facia: rc.facia, touchZones: rc.tz, activeZone: 1
+                    });
+                    return `<div style="background:var(--mlrs-bg);border:${rIdx === 0 ? '2px solid #0284c7' : '1px solid var(--mlrs-border)'};border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 3px 10px rgba(15,23,42,0.05)">
+                      <div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">
+                          <span style="font-size:13.5px;font-weight:800">${rIdx === 0 ? '\uD83C\uDFC6 #1 Best Match: ' : '#' + (rIdx + 1) + ' '}MiBoxer ${rc.model.id}</span>
+                          <span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;background:${rIdx === 0 ? '#dcfce7' : '#e0f2fe'};color:${rIdx === 0 ? '#166534' : '#0369a1'}">${rc.score}% Fit</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--mlrs-muted-fg);margin-bottom:8px;line-height:1.38">${rc.summaryReason}</div>
+                        <div style="display:flex;align-items:center;justify-content:center;background:var(--mlrs-muted);border:1px solid var(--mlrs-border);border-radius:9px;padding:10px;height:275px;overflow:hidden">
+                          <div style="height:100%;display:flex;align-items:center;justify-content:center">${svgHtml.replace(/<svg /, '<svg style="max-height:252px;width:auto;max-width:100%" ')}</div>
+                        </div>
+                        <div style="margin-top:8px;font-size:10.5px;color:var(--mlrs-muted-fg)">
+                          <b>Auto-mapped (${rc.bindings.length}):</b> ${rc.bindings.slice(0, 6).map(b => `<code style="background:var(--mlrs-muted);padding:1px 4px;border-radius:3px">${b.slot}\u2192${cleanShortLabel(b.label)}</code>`).join(' ')}${rc.bindings.length > 6 ? ` +${rc.bindings.length - 6} more` : ''}
+                        </div>
+                      </div>
+                      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                        <button type="button" class="mlrs-btn primary" data-wiz-edit="${rIdx}" style="flex:1;justify-content:center;font-size:11.5px">\uD83C\uDFA8 Open &amp; Edit in Stencil Studio</button>
+                        <button type="button" class="mlrs-btn" data-wiz-apply="${rIdx}" style="justify-content:center;font-size:11.5px;border-color:#059669;color:#059669;font-weight:700">\u2705 Use As-Is</button>
+                      </div>
+                    </div>`;
+                  }).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+        </div>`;
+
+      backdrop.querySelector('#mlrsWizClose').onclick = () => backdrop.remove();
+      const sInp = backdrop.querySelector('#mlrsWizSearch');
+      if (sInp) {
+        sInp.oninput = (e) => { searchTxt = e.target.value; renderWiz(); const el2 = backdrop.querySelector('#mlrsWizSearch'); if (el2) { el2.focus(); el2.setSelectionRange(searchTxt.length, searchTxt.length); } };
+      }
+      backdrop.querySelector('#mlrsWizClearSel').onclick = () => { selectedMap.clear(); renderWiz(); };
+      backdrop.querySelectorAll('[data-wiz-dom]').forEach(b => {
+        b.onclick = () => { filterDom = b.getAttribute('data-wiz-dom'); renderWiz(); };
+      });
+      backdrop.querySelectorAll('[data-wiz-chk]').forEach(chk => {
+        chk.onchange = () => {
+          const eid = chk.getAttribute('data-wiz-chk');
+          const dObj = rawDevs.find(x => x.entity_id === eid);
+          if (chk.checked && dObj) selectedMap.set(eid, Object.assign({}, dObj));
+          else selectedMap.delete(eid);
+          renderWiz();
+        };
+      });
+      backdrop.querySelectorAll('[data-wiz-kind]').forEach(sel => {
+        sel.onchange = () => {
+          const eid = sel.getAttribute('data-wiz-kind');
+          const cur = selectedMap.get(eid);
+          if (cur) { cur.overrideKind = sel.value; renderWiz(); }
+        };
+      });
+      backdrop.querySelector('#mlrsWizAddCustom').onclick = () => {
+        const nm = (backdrop.querySelector('#mlrsWizCustomName').value || '').trim();
+        const dm = backdrop.querySelector('#mlrsWizCustomDom').value || 'light';
+        if (!nm) return;
+        const eid = `${dm}.custom_${nm.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+        const newDev = { entity_id: eid, name: nm, domain: dm, dimmable: true };
+        rawDevs.unshift(newDev);
+        selectedMap.set(eid, newDev);
+        renderWiz();
+      };
+
+      // Action 1: Open in Stencil Studio to fine-tune (background photo, glow, labels)
+      backdrop.querySelectorAll('[data-wiz-edit]').forEach(btn => {
+        btn.onclick = () => {
+          const rc = recs[Number(btn.getAttribute('data-wiz-edit'))];
+          if (!rc) return;
+          backdrop.remove();
+          openFaciaDesigner({
+            model: rc.model,
+            hexId: o.hexId || '',
+            remoteName: `${rc.model.id} ${selArr.length}-Device Custom`,
+            facia: rc.facia,
+            touchZones: rc.tz,
+            hubUrl: o.hubUrl || '',
+            bindRemoteByDefault: Boolean(o.hexId),
+            onSaveCustomModel: async (saveRes) => {
+              saveRes.customModel.suggested_bindings = rc.bindings;
+              if (typeof o.onSaveCustomModel === 'function') await o.onSaveCustomModel(saveRes, rc.bindings);
+            }
+          });
+        };
+      });
+
+      // Action 2: Use As-Is right away!
+      backdrop.querySelectorAll('[data-wiz-apply]').forEach(btn => {
+        btn.onclick = async () => {
+          const rc = recs[Number(btn.getAttribute('data-wiz-apply'))];
+          if (!rc) return;
+          const cleanName = `${rc.model.id} ${selArr.length}-Device Smart Panel`;
+          const targetId = slugifyCustomId(rc.model.id, cleanName);
+          const payload = {
+            id: targetId,
+            name: cleanName,
+            base_model: rc.model.id,
+            stencil_mode: 'full_panel',
+            facia: rc.facia,
+            touch_zones: rc.tz,
+            suggested_bindings: rc.bindings
+          };
+          if (Cat.upsertCustomModel) Cat.upsertCustomModel(payload);
+          if (typeof o.onSaveCustomModel === 'function') {
+            await o.onSaveCustomModel({ customModel: payload, bindNow: Boolean(o.hexId), calibration: defaultCalibration(), touchZones: rc.tz, facia: rc.facia }, rc.bindings);
+          }
+          backdrop.remove();
+        };
+      });
+    }
+
+    document.body.appendChild(backdrop);
+    renderWiz();
+    return backdrop;
+  }
+
+  function mountWorkflowLauncher(containerEl, handlers) {
+    injectStudioStyles(containerEl);
+    if (!containerEl) return null;
+    const h = handlers || {};
+    const storeKey = `mlrs_wf_launcher_${h.launcherId || 'main'}_collapsed`;
+    let collapsed = localStorage.getItem(storeKey) === '1';
+
+    const wipCount = loadWipDrafts().length;
+    const items = [
+      {
+        id: 'recommender',
+        icon: '\uD83E\uDE84',
+        title: 'Recommend Remote for My Devices',
+        desc: 'Pick your lights, blinds, fans & AC \u2014 auto-ranks the best MiBoxer remotes & builds the stencil!',
+        run: () => h.onOpenRecommender ? h.onOpenRecommender() : openDeviceRecommenderWizard({})
+      },
+      {
+        id: 'bare',
+        icon: '\uD83E\uDDFC',
+        title: 'Build Remote from Bare Glass',
+        desc: 'Validated 6-step walkthrough: add custom background artwork, X\u2013Y% sliders & dual icons.',
+        run: () => h.onOpenStencil && h.onOpenStencil('bare_walkthrough')
+      },
+      {
+        id: 'template_or_wip',
+        icon: wipCount > 0 ? '\uD83D\uDCC2' : '\u2728',
+        title: wipCount > 0 ? `Resume WIP Draft (${wipCount}) or Template` : 'Create from Starter Template',
+        desc: wipCount > 0 ? `Jump right back into your saved work-in-progress stencil draft (or pick a template).` : 'Start from a Hybrid Arc + Bar Slider or Room Rocker template and customise labels & glow.',
+        run: () => h.onOpenStencil && h.onOpenStencil(wipCount > 0 ? 'resume_draft' : 'template_edit')
+      },
+      {
+        id: 'mapper',
+        icon: '\uD83C\uDF9B\uFE0F',
+        title: 'Map Buttons & Sliders to Devices',
+        desc: 'Bind 1\u00d7 Tap, 2\u00d7 Double, Long Hold & variable slider ranges to HA / Homebridge entities.',
+        run: () => h.onFocusMapper && h.onFocusMapper()
+      },
+      {
+        id: 'showcase',
+        icon: '\uD83E\uDDED',
+        title: 'Guided Studio Showcase',
+        desc: 'Interactive tour of live 2.4 GHz RF reticles, Peel-Back Stencil X-Ray & Dark-Room Glow.',
+        run: () => h.onStartShowcase && h.onStartShowcase()
+      },
+      {
+        id: 'export_pod',
+        icon: '\uD83D\uDDA8\uFE0F',
+        title: '1:1 Print Sheet & Luminous POD',
+        desc: 'Generate a calibrated 1:1 mm cut sheet (with background graphic), SVG, or POD JSON.',
+        run: () => h.onOpenStencil && h.onOpenStencil('export_pod')
+      }
+    ];
+
+    function render() {
+      if (collapsed) {
+        containerEl.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--mlrs-bg,#fff);border:1px solid var(--mlrs-border,#e2e8f0);border-radius:8px;padding:6px 12px;margin-bottom:8px;font-size:12px">
+            <span style="font-weight:700;color:var(--mlrs-fg,#0f172a)">\ud83e\udded What would you like to do today? <span style="font-weight:500;color:var(--mlrs-muted-fg,#64748b)">(Bare Build Walkthrough, Templates, Device Mapping, POD Export)</span></span>
+            <button type="button" class="mlrs-tour-btn demo" data-wf-toggle="open" style="padding:3px 10px !important;font-size:11.5px !important">Show 6 Workflows \u25be</button>
+          </div>`;
+        const btn = containerEl.querySelector('[data-wf-toggle="open"]');
+        if (btn) btn.onclick = () => { collapsed = false; localStorage.setItem(storeKey, '0'); render(); };
+        return;
+      }
+
+      containerEl.innerHTML = `
+        <div class="mlrs-launcher-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <div>
+              <span style="font-size:13.5px;font-weight:800;color:var(--mlrs-fg,#0f172a)">\ud83d\udc4b What would you like to do today?</span>
+              <span style="font-size:11.5px;color:var(--mlrs-muted-fg,#64748b);margin-left:6px">Pick a guided workflow below to jump straight in:</span>
+            </div>
+            <button type="button" class="mlrs-tour-btn" data-wf-toggle="close" style="padding:3px 9px !important;font-size:11px !important">Hide Options \u25b4</button>
+          </div>
+          <div class="mlrs-launcher-grid">
+            ${items.map(it => `
+              <button type="button" class="mlrs-wf-item" data-wf-id="${it.id}">
+                <span class="mlrs-wf-ico">${it.icon}</span>
+                <span style="min-width:0;flex:1">
+                  <span style="display:block;font-size:12px;font-weight:700;color:var(--mlrs-fg,#0f172a);margin-bottom:2px">${it.title}</span>
+                  <span style="display:block;font-size:11px;color:var(--mlrs-muted-fg,#64748b);line-height:1.34">${it.desc}</span>
+                </span>
+              </button>
+            `).join('')}
+          </div>
+        </div>`;
+
+      const closeBtn = containerEl.querySelector('[data-wf-toggle="close"]');
+      if (closeBtn) closeBtn.onclick = () => { collapsed = true; localStorage.setItem(storeKey, '1'); render(); };
+      containerEl.querySelectorAll('[data-wf-id]').forEach(el => {
+        el.onclick = () => {
+          const found = items.find(x => x.id === el.getAttribute('data-wf-id'));
+          if (found && found.run) found.run();
+        };
+      });
+    }
+
+    render();
+    return { expand: () => { collapsed = false; localStorage.setItem(storeKey, '0'); render(); } };
   }
 
   root.MiLightRemoteStudio = {
     version: '2.5.0',
-    normalizeTouchZones, defaultCalibration, resolvePhysicalToCustomAction, resolveCustomToPhysicalAction, mountInteractiveStage, mountPeelableStage, downloadTextFile, mountShowcaseTour,
-    buildOneToOnePrintSvg, openPrintSheetWindow, openFaciaDesigner
+    normalizeTouchZones, defaultCalibration, resolvePhysicalToCustomAction, resolveCustomToPhysicalAction, mountInteractiveStage, mountPeelableStage, downloadTextFile, mountShowcaseTour, mountWorkflowLauncher,
+    buildPodOrderPayload, buildOneToOnePrintSvg, openPrintSheetWindow, openFaciaDesigner, openDeviceRecommenderWizard, loadWipDrafts
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -3808,7 +6106,7 @@ return false;
     const target = rem || (this._remotes || []).find((x) => String(x.hex || "").toUpperCase() === String(this._selHex || "").toUpperCase()) || {};
     const mod = this._resolveModel(target);
     const hubUrl = this._getHubUrl();
-    window.MiLightRemoteStudio.openFaciaDesigner({
+    window.MiLightRemoteStudio.openFaciaDesigner({ initialWorkflow: (() => { const w = this._pendingStencilWorkflow || null; this._pendingStencilWorkflow = null; return w; })(),
       hubUrl,
       model: mod,
       hexId: target.hex || this._selHex,
@@ -4838,7 +7136,16 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         select, input[type="text"] { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--divider-color); background: var(--secondary-background-color); color: var(--primary-text-color); font-size: 12.5px; }
         .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; background: #0284c7; color: #ffffff; font-weight: 800; font-size: 11px; }
         pre { background: var(--secondary-background-color); border: 1px solid var(--divider-color); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 11.5px; margin: 8px 0 0; }
-      </style>
+      
+      button, .btn, .pill-btn, [id*="Sync"], [id*="refreshBtn"], [id*="Stencil"] {
+        transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease !important;
+      }
+      button:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.07); }
+      button:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(0.95) !important; }
+      .mrs-sync-flash-ok { background: #059669 !important; border-color: #059669 !important; color: #ffffff !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.28) !important; }
+      .mrs-sync-flash-warn { background: #d97706 !important; border-color: #d97706 !important; color: #ffffff !important; }
+    
+    </style>
 
       <div class="app-shell">
         <div class="hdr">
@@ -4850,6 +7157,7 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
             <label style="display:inline-flex;align-items:center;gap:5px;margin:0;text-transform:none;font-size:12px;cursor:pointer;">
               <input id="liveSendChk" type="checkbox" checked /> Live Dispatch
             </label>
+            <button id="openRecommenderWizBtn" type="button" style="background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:700">🪄 Recommend Remote</button>
             <button id="openHubStencilStudioBtn" type="button" style="background:#0f172a;color:#fff;">🎨 Stencil Studio</button>
             <button id="refreshBtn" type="button">🔄 Sync Remotes</button>
             <a href="${hubUrl}/#/remotes" target="_blank" rel="noreferrer" style="text-decoration:none;"><button class="sec" type="button">Hub #/remotes ↗</button></a>
@@ -4858,7 +7166,8 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
         </div>
 
         <!-- Dedicated Framed Guided Showcase Card -->
-        <div id="haGuidedTourBar" style="flex-shrink:0;"></div>
+        <div id="mrsWorkflowLauncherMount"></div>
+      <div id="haGuidedTourBar" style="flex-shrink:0;"></div>
         <div class="status-line"><span id="status">Loading registered remotes...</span></div>
 
         <!-- 3-Column Internal Resizing Workspace -->
@@ -5087,14 +7396,96 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
       }
     };
     this.querySelector("#liveSendChk").onchange = (e) => { this._liveSend = e.target.checked; };
-    this.querySelector("#refreshBtn").onclick = () => this._loadRemotes();
+    this.querySelector("#refreshBtn").onclick = async (ev) => {
+        const btn = ev && ev.currentTarget ? ev.currentTarget : (this.shadowRoot || this).querySelector('#refreshBtn');
+        const origHtml = btn ? btn.innerHTML : '🔄 Sync Remotes';
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.85'; btn.innerHTML = '⏳ Syncing Hub…'; }
+        try {
+          await (this._loadRemotes());
+          const cnt = Array.isArray(this._remotes) ? this._remotes.length : (this._remotes ? Object.keys(this._remotes).length : 0);
+          if (btn) {
+            btn.disabled = false; btn.style.opacity = '1';
+            btn.classList.add('mrs-sync-flash-ok');
+            btn.innerHTML = `✅ Synced (${cnt})!`;
+            setTimeout(() => { if (btn.isConnected) { btn.classList.remove('mrs-sync-flash-ok'); btn.innerHTML = origHtml; } }, 2400);
+          }
+        } catch (err) {
+          if (btn) {
+            btn.disabled = false; btn.style.opacity = '1';
+            btn.classList.add('mrs-sync-flash-warn');
+            btn.innerHTML = '⚠️ Hub Offline';
+            setTimeout(() => { if (btn.isConnected) { btn.classList.remove('mrs-sync-flash-warn'); btn.innerHTML = origHtml; } }, 3000);
+          }
+        }
+      };
     window.__MLRS_STAGE_DOWNLOAD = async (filename, content, mime) => {
       if (!this._hass) return null;
       const res = await this._hass.callApi("POST", "milight_remote_studio/download_stage", { filename, content, mime });
       return res && res.url ? res.url : null;
     };
 
-    const tourMount = this.querySelector("#haGuidedTourBar");
+    
+      const wfBox = (this.shadowRoot || this).querySelector('#mrsWorkflowLauncherMount');
+      if (wfBox && window.MiLightRemoteStudio && window.MiLightRemoteStudio.mountWorkflowLauncher) {
+        window.MiLightRemoteStudio.mountWorkflowLauncher(wfBox, {
+          launcherId: 'ha_main_studio',
+          onOpenRecommender: () => {
+            const hObj = this._hass || this.hass || {};
+            const statesMap = hObj.states || {};
+            const allowedDoms = new Set(['light', 'cover', 'fan', 'climate', 'media_player', 'switch', 'scene', 'script']);
+            const haDevs = Object.entries(statesMap)
+              .filter(([eid]) => allowedDoms.has(eid.split('.')[0]))
+              .map(([eid, st]) => ({
+                entity_id: eid,
+                domain: eid.split('.')[0],
+                name: (st && st.attributes && st.attributes.friendly_name) || eid,
+                dimmable: eid.startsWith('light.') ? Boolean(!st.attributes || !st.attributes.supported_color_modes || !st.attributes.supported_color_modes.every(m => m === 'onoff')) : true
+              }));
+            if (window.MiLightRemoteStudio && window.MiLightRemoteStudio.openDeviceRecommenderWizard) {
+              window.MiLightRemoteStudio.openDeviceRecommenderWizard({
+                devices: haDevs,
+                hexId: this._selectedHex || '',
+                hubUrl: this._hubUrl || '',
+                onSaveCustomModel: async (res) => {
+                  if (res && res.customModel && window.MiBoxerCatalog && window.MiBoxerCatalog.upsertCustomModel) {
+                    window.MiBoxerCatalog.upsertCustomModel(res.customModel);
+                  }
+                  if (typeof this._saveCustomModelToBackend === 'function') {
+                    try { await this._saveCustomModelToBackend(res); } catch (_) {}
+                  }
+                  if (typeof this._render === 'function') this._render();
+                }
+              });
+            }
+          },
+          onOpenStencil: (wfMode) => {
+            this._pendingStencilWorkflow = wfMode;
+            const sb = (this.shadowRoot || this).querySelector('#openHubStencilStudioBtn');
+            if (sb) sb.click();
+          },
+          onFocusMapper: () => {
+            const mapperCol = (this.shadowRoot || this).querySelector('.col-right, [data-tab="mapper"], #mapperPane') || (this.shadowRoot || this).querySelectorAll('.card, section')[2];
+            if (mapperCol) {
+              mapperCol.classList.add('mlrs-tour-focus');
+              mapperCol.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              setTimeout(() => mapperCol.classList.remove('mlrs-tour-focus'), 3600);
+            }
+          },
+          onStartShowcase: () => {
+            localStorage.setItem('mlrs_tour_ha_studio_hide', '0');
+            localStorage.setItem('mlrs_tour_ha_studio_idx', '0');
+            localStorage.setItem('mlrs_tour_main_studio_hide', '0');
+            if (typeof this._render === 'function') this._render();
+            else location.reload();
+          },
+          onSyncAndCalibrate: () => {
+            const sy = (this.shadowRoot || this).querySelector('#refreshBtn');
+            if (sy) sy.click();
+          }
+        });
+      }
+
+      const tourMount = this.querySelector("#haGuidedTourBar");
     if (tourMount && window.MiLightRemoteStudio && window.MiLightRemoteStudio.mountShowcaseTour) {
       window.MiLightRemoteStudio.mountShowcaseTour(tourMount, {
         tourId: "ha_studio_main",
@@ -5881,4 +8272,3 @@ this._renderAnalogIndicators(this.querySelector("#faceplateBox"), hx, this._selZ
   }
 }
 customElements.define("milight-remote-studio-panel", MilightRemoteStudioPanel);
-
